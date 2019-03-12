@@ -1,0 +1,99 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Dapper;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+
+namespace ERP.Authority.DAL
+{
+    public class E_EmployeeDAL
+    {
+        /// <summary>
+        /// 根据部门获取员工信息
+        /// </summary>
+        /// <param name="deptID"></param>
+        /// <returns></returns>
+        public List<E_Employee> GetEmployeeListByDeptID(string deptID)
+        {
+            string sql = @"
+SELECT  EmpID ,
+        EmpCode ,
+        CityID ,
+        EmpNo ,
+        EmpName ,
+        DeptID
+FROM    dbo.E_Employee
+WHERE FlagDeleted = 0 AND FlagTrashed = 0
+AND DeptID = @DeptID;";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<E_Employee>(sql, new { DeptID = deptID }).ToList();
+            }
+        }
+
+        /// <summary>
+        /// 根据条件查询员工相关信息
+        /// </summary>
+        /// <param name="emp"></param>
+        /// <returns></returns>
+        public List<dynamic> GetEmployeeListForTalbe(E_Employee emp, PageModel pm)
+        {
+            StringBuilder sbSql = new StringBuilder(@"
+SELECT  e.EmpID ,
+        e.EmpCode ,
+        e.EmpNo ,
+        e.EmpName ,
+        e.Mobile ,
+        d.DeptName ,
+        p.PositionName ,
+        c.CityName
+FROM    dbo.E_Employee e
+        LEFT JOIN dbo.E_Department d ON e.DeptID = d.DeptID
+        LEFT JOIN dbo.E_Position p ON e.PositionID = p.PositionID
+        LEFT JOIN dbo.B_City c ON e.CityID = c.CityID
+WHERE   e.FlagTrashed = 0
+        AND e.FlagDeleted = 0 ");
+
+            var dyParamter = new DynamicParameters();
+            dyParamter.Add("PageIndex", pm.PageIndex);
+            dyParamter.Add("PageSize", pm.PageSize);
+            if (emp != null)
+            {
+                if (emp.CityID > 0)
+                {
+                    sbSql.Append(" AND e.CityID = @CityID");
+                    dyParamter.Add("CityID", emp.CityID);
+                }
+                if (!string.IsNullOrEmpty(emp.PositionID))
+                {
+                    sbSql.Append(" AND e.PositionID = @PositionID ");
+                    dyParamter.Add("PositionID", emp.PositionID);
+                }
+                if (!string.IsNullOrEmpty(emp.DeptID))
+                {
+                    sbSql.Append(" AND e.DeptID = @DeptID ");
+                    dyParamter.Add("DeptID", emp.DeptID);
+                }
+                if (!string.IsNullOrEmpty(emp.EmpID))
+                {
+                    sbSql.Append(" AND e.EmpID = @EmpID ");
+                    dyParamter.Add("EmpID", emp.EmpID);
+                }
+            }
+
+            string querySql = string.Format("WITH query AS ({0}) ", sbSql);
+            string countSql = querySql + " SELECT COUNT(*) FROM query";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                pm.TotalCount = conn.Query<int>(countSql, dyParamter).FirstOrDefault();
+                if (pm.TotalCount > 0)
+                {
+                    string pageSql = querySql + " SELECT * FROM ( SELECT ROW_NUMBER() OVER(ORDER BY EmpNo ASC) AS RowNum, * FROM query ) t WHERE t.RowNum > (@PageIndex -1) * @PageSize AND t.RowNum <= @PageIndex * @PageSize";
+                    return conn.Query<dynamic>(pageSql, dyParamter).ToList();
+                }
+                return new List<dynamic>();
+            }
+        }
+    }
+}

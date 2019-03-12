@@ -1,0 +1,19 @@
+﻿using System.Collections.Generic;
+using ERP.Authority.DAL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+
+namespace ERP.Authority.BLL
+{
+    public class B_CityBLL
+    {
+        /// <summary>
+        /// 获取所有城市列表
+        /// </summary>
+        /// <returns></returns>
+        public ResultModel<List<B_City>> GetAllCityList()
+        {
+            return new ResultModel<List<B_City>>() {Data = new B_CityDAL().GetAllCityList()};
+        } 
+    }
+}

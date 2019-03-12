@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../Content/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="../../Content/ztree/metroStyle/hjc.min.css" media="all">
+    <link rel="stylesheet" href="../../Content/ztree/metroStyle/metroStyle.css" media="all">
+    <link rel="stylesheet" href="../../Content/treetable/css/jquery.treetable.css" media="all">
+    <link rel="stylesheet" href="../../Content/treetable/css/jquery.treetable.theme.default.css" media="all">
+    <title></title>
+</head>
+<body>
+	<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+		<legend>复制管辖权限到员工</legend>
+	</fieldset>
+	<div class="layui-form-item" id="allType">
+		<div class="layui-btn-container" style="padding-left:600px">
+			<button class="layui-btn layui-btn-sm" onclick="CopyDeptToEmp.SaveEmpDeptTable()" style="width:100px" data-type="parseTable">保存</button>
+		</div>
+		<div style="width:785px">
+			<table class="layui-hide" id="Deptdemo" lay-filter="Deptdemo"></table>
+		</div>
+	</div>
+	<script src="../../Content/Jquery/jquery-1.11.3.min.js" charset="utf-8"></script>
+	<script src="../../Content/layui/layui.js" charset="utf-8"></script>
+	<script src="../../Content/jscustomer/PublicComm.js"></script>
+	<script src="../../Content/jscustomer/ControlComm.js"></script>
+	<script src="../../Content/jscustomer/CacheHelper.js"></script>
+	<script src="../../Content/jscustomer/department/CopyDeptToEmp.js" charset="utf-8"></script>
+</body>
+</html>

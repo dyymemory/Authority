@@ -1,0 +1,21 @@
+﻿using System.Collections.Generic;
+using System.Web.Http;
+using ERP.Authority.BLL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+
+namespace ERP.Authority.API.Controllers.V1
+{
+    public class DepartmentController : BaseApiController
+    {
+        /// <summary>
+        /// 获取所有部门列表并按照父子顺序排序
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<List<dynamic>> GetAllDepartmentList()
+        {
+            return new E_DepartmentBLL().GetAllDepartmentList();
+        }        
+    }
+}

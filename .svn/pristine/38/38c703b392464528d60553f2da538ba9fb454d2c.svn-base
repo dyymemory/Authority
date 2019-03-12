@@ -1,0 +1,14 @@
+﻿/*权限*/
+var PrivComm = {
+    PrivEmployee: {},//员工权限
+    Init: function () {
+        var param = {};
+        PublicComm.Ajax("POST", "/Authority/Privilege/GetPrivEmployeeByEmployee", param, true, function (result) {
+            PrivComm.PrivEmployee = result.Data;
+        });
+    },
+}
+
+$(function () {
+    PrivComm.Init();
+});

@@ -1,0 +1,29 @@
+﻿using System.Collections.Generic;
+using System.Web.Http;
+using ERP.Authority.BLL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+using Newtonsoft.Json.Linq;
+
+namespace ERP.Authority.API.Controllers.V1
+{
+    public class PrivilegeController: ApiController
+    {
+        Priv_ModuleBLL privbll = new Priv_ModuleBLL();
+        [HttpPost]
+        public ResultModel<List<E_MarketMenu>> GetTreeList()
+        {
+            return new Priv_ModuleBLL().GetTreeList();
+        }
+        [HttpPost]
+        public ResultModel<List<Priv_Module>> GetPrivilegeTreeList()
+        {
+            return new Priv_ModuleBLL().GetPrivilegeTreeList();
+        }
+        [HttpPost]
+        public ResultModel<object> UpdateEmpPrivilege([FromBody] Priv_Module modulePriv)
+        {
+            return privbll.UpdateEmpPrivilege(modulePriv.ModuleCode, modulePriv.ModDate);
+        }
+    }
+}

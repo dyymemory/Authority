@@ -1,0 +1,136 @@
+﻿using Dapper;
+using ERP.Authority.Entity.SDTM;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+using ERP.Authority.Entity.SDTMComm;
+
+namespace ERP.Authority.DAL
+{
+    public class Priv_DepartmentDAL
+    {
+        /// <summary>
+        /// 获取门店权限
+        /// </summary>
+        /// <param name="privDepartmentData"></param>
+        /// <param name="isContainDel"></param>
+        /// <returns></returns>
+        public List<dynamic> GetPrivDepartmentList(Priv_DepartmentData privDepartmentData, bool isContainDel = false)
+        {
+            StringBuilder sql = new StringBuilder(@"
+SELECT  DepartOnlyCode ,
+        CityID ,
+        PlatForm ,
+        TypeCode ,
+        DataCode
+FROM    dbo.Priv_Department (NOLOCK)
+WHERE   CityID = @CityID ");
+            var dyParameters = new DynamicParameters();
+            dyParameters.Add("CityID", privDepartmentData.CityID);
+
+            //能看我的
+            if (privDepartmentData.ViewType == 2)
+            {
+                sql.Append(" AND DataCode = @DataCode ");
+                dyParameters.Add("DataCode", privDepartmentData.DataCode);
+            }
+            //我能看的
+            else
+            {
+                sql.Append(" AND DepartOnlyCode = @DepartOnlyCode ");
+                dyParameters.Add("DepartOnlyCode", privDepartmentData.DepartOnlyCode);
+            }
+            if (!string.IsNullOrEmpty(privDepartmentData.TypeCode))
+            {
+                sql.Append(" AND TypeCode = @TypeCode ");
+                dyParameters.Add("TypeCode", privDepartmentData.TypeCode);
+            }
+            if (privDepartmentData.TypeCodeList != null && privDepartmentData.TypeCodeList.Count > 0)
+            {
+                sql.Append(" AND EXISTS ( SELECT 1 FROM Func_SplitToTable(@TypeCodeList, ',') t WHERE  t.value = TypeCode ) ");
+                dyParameters.Add("TypeCodeList", string.Join(",", privDepartmentData.TypeCodeList));
+            }
+            if (!isContainDel)
+            {
+                sql.Append(" AND IsDel = 0 ");
+            }
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<dynamic>(sql.ToString(), dyParameters).ToList();
+            }
+        }
+
+        /// <summary>
+        /// 保存门店权限
+        /// </summary>
+        /// <param name="privDepartmentData">相关参数信息</param>
+        /// <param name="insertPrivDepartment"></param>
+        /// <param name="selectedList"></param>
+        /// <param name="cancelList"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public void SavePrivDepartment(Priv_DepartmentData privDepartmentData, DataTable insertPrivDepartment, List<int> selectedList, List<int> cancelList, UserInfoForCookie user)
+        {
+            StringBuilder updateSql = new StringBuilder();
+            DynamicParameters dyParameters = new DynamicParameters();
+            dyParameters.Add("CityID", privDepartmentData.CityID);
+            dyParameters.Add("TypeCode", privDepartmentData.TypeCode);
+            dyParameters.Add("Modifier", user.EmpCode);
+            string param1 = "";
+            string param2 = "";
+            //能看我的
+            if (privDepartmentData.ViewType == 2)
+            {
+                param1 = "DataCode";
+                param2 = "DepartOnlyCode";
+                dyParameters.Add("DataCode", privDepartmentData.DataCode);
+
+            }
+            //我能看的
+            else
+            {
+                param1 = "DepartOnlyCode";
+                param2 = "DataCode";
+                dyParameters.Add("DepartOnlyCode", privDepartmentData.DepartOnlyCode);
+            }
+            if (selectedList.Count > 0)
+            {
+                updateSql.AppendFormat(
+                    @"UPDATE Priv_Department SET IsDel = 0 ,Modifier = @Modifier ,ModDate = GETDATE() WHERE IsDel = 1 AND CityID = @CityID AND TypeCode = @TypeCode AND {0} = @{0} AND EXISTS ( SELECT 1 FROM Func_SplitToTable(@Selected, ',') t WHERE  t.value = CAST({1} AS NVARCHAR(20)));", param1, param2);
+                dyParameters.Add("Selected", string.Join(",", selectedList));
+            }
+            if (cancelList.Count > 0)
+            {
+                updateSql.AppendFormat(
+                    @"UPDATE Priv_Department SET IsDel = 1 ,Modifier = @Modifier ,ModDate = GETDATE() WHERE IsDel = 0 AND CityID = @CityID AND TypeCode = @TypeCode AND {0} = @{0} AND EXISTS ( SELECT 1 FROM Func_SplitToTable(@Cancel, ',') t WHERE  t.value = CAST({1} AS NVARCHAR(20)));", param1, param2);
+                dyParameters.Add("Cancel", string.Join(",", cancelList));
+            }
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                using (var tran = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        if (updateSql.Length > 0)
+                        {
+                            conn.Execute(updateSql.ToString(), dyParameters, tran);
+                        }
+                        if (insertPrivDepartment != null && insertPrivDepartment.Rows.Count > 0)
+                        {
+                            CommonDAL.BulkCopy(conn, insertPrivDepartment, tran);
+                        }
+                        tran.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        tran.Rollback();
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,93 @@
+﻿using System.Collections.Generic;
+using System.Web.Http;
+using ERP.Authority.BLL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+using Newtonsoft.Json.Linq;
+
+namespace ERP.Authority.API.Controllers.V1
+{
+    public class PrivilegeController : BaseApiController
+    {
+        Priv_ModuleBLL privbll = new Priv_ModuleBLL();
+        [HttpPost]
+        public ResultModel<List<E_MarketMenu>> GetTreeList()
+        {
+            return new Priv_ModuleBLL().GetTreeList();
+        }
+        /// <summary>
+        /// 获取权限树
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<List<Priv_Module>> GetPrivilegeTreeList()
+        {
+            return new Priv_ModuleBLL().GetPrivilegeTreeList();
+        }
+        /// <summary>
+        /// 保存权限到员工
+        /// </summary>
+        /// <param name="modulePriv"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<object> UpdateEmpPrivilege([FromBody] Priv_Employee modulePriv)
+        {
+            return privbll.UpdateEmpPrivilege(modulePriv);
+        }
+        [HttpPost]
+        public ResultModel<List<Priv_Module>> GetAllModulePrivilegeList()
+        {
+            return privbll.GetAllModulePrivilegeList();
+        }
+        /// <summary>
+        /// 保存权限到职位
+        /// </summary>
+        /// <param name="p_Position"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<object> UpdatePrivToPosition([FromBody] Priv_Position p_Position)
+        {
+            return new Priv_PositionBLL().UpdatePrivToPosition(p_Position);
+        }
+        /// <summary>
+        /// 根据员工code与平台获取员工权限信息
+        /// </summary>
+        /// <param name="privEmp"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<dynamic> GetPrivModuleByEmployee([FromBody] Priv_Employee privEmp)
+        {
+            return new Priv_ModuleBLL().GetPrivModuleByEmployee(privEmp);
+        }
+        /// <summary>
+        /// 保存员工城市权限
+        /// </summary>
+        /// <param name="privEmployeeCity"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<object> SavePrivEmployeeCity([FromBody] Priv_EmployeeCity privEmployeeCity)
+        {
+            return new Priv_EmployeeCityBLL().SavePrivEmployeeCity(privEmployeeCity);
+        }
+        /// <summary>
+        /// 获取员工城市权限
+        /// </summary>
+        /// <param name="privEmployeeCity"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<Priv_EmployeeCity> GetPrivEmployeeCity([FromBody] Priv_EmployeeCity privEmployeeCity)
+        {
+            return new Priv_EmployeeCityBLL().GetPrivEmployeeCity(privEmployeeCity);
+        }
+        [HttpPost]
+        public ResultModel<object> MultiUpdatePrivToEmp([FromBody] List<MultiList> multilists)
+        {
+            return new Priv_EmployeeBLL().MultiUpdatePrivToEmp(multilists);
+        }
+        [HttpPost]
+        public ResultModel<List<dynamic>> GetDepartPrivByEmployee([FromBody] Priv_Employee_Data priv_Employee_Data)
+        {
+            return new Priv_Employee_DataBLL().GetDepartPrivByEmployee(priv_Employee_Data);
+        }
+    }
+}

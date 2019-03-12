@@ -1,0 +1,248 @@
+﻿/*JS 常用控件*/
+var ControlComm = {
+    CacheCity: [],//城市缓存
+    CacheDepartment: [],//部门缓存
+    CachePosition: [],//职位缓存
+    ///<summary>
+    ///城市下拉框绑定
+    ///</summary>
+    ///<param name="element">需要绑定option的控件</param>
+    ///<param name="form">layui.form，用于渲染</param>
+    ///<param name="cityid">城市ID，赋默认值</param>
+    ///<return></return>
+    CityBinding: function (element, form, cityid) {
+        if (Array.isArray(ControlComm.CacheCity) && ControlComm.CacheCity.length > 0) {
+            ControlComm.CityOption(ControlComm.CacheCity, element, form, cityid);
+        } else {
+            PublicComm.Ajax("POST", "/Authority/City/GetAllCityList", null, true, function (result) {
+                ControlComm.CacheCity = result.Data;
+                ControlComm.CityOption(ControlComm.CacheCity, element, form, cityid);
+            });
+        }
+    },
+    ///<summary>
+    ///城市下拉框绑定
+    ///</summary>
+    ///<param name="arrJson">城市数组</param>
+    ///<param name="element">需要绑定option的控件</param>
+    ///<param name="form">layui.form，用于渲染</param>
+    ///<param name="cityid">城市ID，赋默认值</param>
+    ///<return></return>
+    CityOption: function (arrJson, element, form, cityid) {
+        var strHTML = '<option value="">直接选择或搜索选择</option>';
+        for (var index in arrJson) {
+            strHTML += '<option value="' + arrJson[index].CityID + '">' + arrJson[index].CityName + '</option>';
+        }
+        $(element).html(strHTML);
+        if (!!cityid) {
+            $(element).find("[value='" + cityid + "']").prop("selected", true);
+        }
+        form.render();
+    },
+    ///<summary>
+    ///部门下拉框绑定
+    ///</summary>
+    ///<param name="element">需要绑定option的控件</param>
+    ///<param name="form">layui.form，用于渲染</param>
+    ///<param name="cityid">城市ID，赋默认值</param>
+    ///<return></return>
+    DepartmentBinding: function (element, form) {
+        if (Array.isArray(ControlComm.CacheDepartment) && ControlComm.CacheDepartment.length > 0) {
+            ControlComm.DepartmentOption(ControlComm.CacheDepartment, element, form);
+        } else {
+            PublicComm.Ajax("POST", "/Authority/Department/GetAllDepartmentList", null, true, function (result) {
+                ControlComm.CacheDepartment = result.Data;
+                ControlComm.DepartmentOption(ControlComm.CacheDepartment, element, form);
+            });
+        }
+
+    },
+    ///<summary>
+    ///部门下拉框绑定
+    ///</summary>
+    ///<param name="arrJson">部门数组</param>
+    ///<param name="element">需要绑定option的控件</param>
+    ///<param name="form">layui.form，用于渲染</param>
+    ///<return></return>
+    DepartmentOption: function (arrJson, element, form) {
+        var strHTML = '<option value="">直接选择或搜索选择</option>';
+        for (var index in arrJson) {
+            strHTML += '<option value="' + arrJson[index].DeptID + ' " DeptNo="' + arrJson[index].DeptNo + '" ParentDeptNo="' + arrJson[index].ParentDeptNo + '">[' + arrJson[index].Header + ']' + arrJson[index].DeptName + '</option>';
+        }
+        $(element).html(strHTML);
+        form.render();
+    },
+    ///<summary>
+    ///员工下拉框绑定
+    ///</summary>
+    ///<param name="element">需要绑定option的控件</param>
+    ///<param name="form">layui.form，用于渲染</param>
+    ///<param name="param">url参数，格式：{ 'DeptID': '' }</param>
+    ///<return></return>
+    EmployeeBinding: function (element, form, param) {
+        PublicComm.Ajax("POST", "/Authority/Employee/GetEmployeeListByDeptID", param, true, function (result) {
+            var strHTML = '<option value="">直接选择或搜索选择</option>';
+            for (var index in result.Data) {
+                strHTML += '<option value="' + result.Data[index].EmpCode + '" EmpID="' + result.Data[index].EmpID + '">[' + result.Data[index].EmpNo + ']' + result.Data[index].EmpName + '</option>';
+            }
+            $(element).html(strHTML);
+            form.render();
+        });
+    },
+    ///<summary>
+    ///职位下拉框绑定
+    ///</summary>
+    ///<param name="element">需要绑定option的控件</param>
+    ///<param name="form">layui.form，用于渲染</param>
+    ///<param name="positionid">职位ID，赋默认值</param>
+    ///<return></return>
+    PositionBinding: function (element, form, positionid) {
+        if (Array.isArray(ControlComm.CachePosition) && ControlComm.CachePosition.length > 0) {
+            ControlComm.PositionOption(ControlComm.CachePosition, element, form, positionid);
+        } else {
+            PublicComm.Ajax("POST", "/Authority/Position/GetAllPositionList", null, true, function (result) {
+                ControlComm.CachePosition = result.Data;
+                ControlComm.PositionOption(ControlComm.CachePosition, element, form, positionid);
+            });
+        }
+
+    },
+    ///<summary>
+    ///城市下拉框绑定
+    ///</summary>
+    ///<param name="arrJson">职位数组</param>
+    ///<param name="element">需要绑定option的控件</param>
+    ///<param name="form">layui.form，用于渲染</param>
+    ///<param name="positionid">职位ID，赋默认值</param>
+    ///<return></return>
+    PositionOption: function (arrJson, element, form, positionid) {
+        var strHTML = '<option value="">直接选择或搜索选择</option>';
+        for (var index in arrJson) {
+            strHTML += '<option value="' + arrJson[index].PositionID + '">' + arrJson[index].PositionName + '</option>';
+        }
+        $(element).html(strHTML);
+        if (positionid != null) {
+            $(element).find("[value='" + positionid + "']").attr("selected", true);
+        }
+        form.render();
+    },
+    GetPrivTree: function (element, url, privString) {
+        var zTree;
+        var setting = {
+            view: {
+                selectedMulti: true
+            },
+            check: {
+                enable: true,
+                chkStyle: "checkbox",
+                chkboxType: { "Y": "ps", "N": "ps" }
+            },
+            data: {
+                simpleData: {
+                    enable: true,
+                    idKey: "ModuleCode",
+                    pIdKey: "ParentCode",
+                    rootPId: 0
+                }
+				,
+                key: {
+                    checked: "checked",
+                    name: "ModuleName",
+                    id: "ModuleCode"
+                }
+            },
+            edit: {
+                enable: false
+            }
+        };
+        PublicComm.Ajax("POST", url, null, true, function (result) {
+            zTree = $.fn.zTree.init(element, setting, result.Data);
+            //undefined,null,0
+            if (!!privString) {
+                var menuIds = privString.split(',');
+                for (var i = 0; i < menuIds.length; i++) {
+                    var node = zTree.getNodeByParam("ModuleCode", menuIds[i]);
+                    if (node != null) {
+                        zTree.checkNode(node, true);
+                    }
+                };
+            }
+            zTree.expandAll(true);
+        });
+    },
+    DataPermissions: [
+            { 'name': 'jurisdictionSel', 'text': '管辖权限' },
+            { 'name': 'publicSel', 'text': '公盘看' },
+            { 'name': 'privateSel', 'text': '私盘看' },
+            { 'name': 'specialSel', 'text': '特盘看' },
+            { 'name': 'finalSel', 'text': '封盘看' },
+            { 'name': 'publicSelDetail', 'text': '公盘看详情' },
+            { 'name': 'privateSelDetail', 'text': '私盘看详情' },
+            { 'name': 'specialSelDetail', 'text': '特盘看详情' },
+            { 'name': 'finalSelDetail', 'text': '封盘看详情' },
+            { 'name': 'publicModify', 'text': '公盘设' },
+            { 'name': 'privateModify', 'text': '私盘设' },
+            { 'name': 'specialModify', 'text': '特盘设' },
+            { 'name': 'finalModify', 'text': '封盘设' },
+            { 'name': 'publicCusSel', 'text': '公客' },
+            { 'name': 'privateCusSel', 'text': '私客' },
+    ],
+    DataPermissionsBinding: function (element, form) {
+        var strHTML = '';
+        layui.each(ControlComm.DataPermissions, function () {
+            strHTML += '<div class="layui-col-md12">';
+            strHTML += '<label class="layui-form-label">' + this.text + '：</label>';
+            strHTML += '<div class="layui-input-block">';
+            strHTML += '<input type="radio" name="' + this.name + '" value="0" title="无">';
+            strHTML += '<input type="radio" name="' + this.name + '" value="1" title="本人">';
+            strHTML += '<input type="radio" name="' + this.name + '" value="2" title="本部">';
+            strHTML += '<input type="radio" name="' + this.name + '" value="3" title="跨部">';
+            strHTML += '</div>';
+            strHTML += '</div>';
+        });
+        $(element).html(strHTML);
+        form.render();
+    },
+    GetDeptTree: function (element, url, arrDept) {
+        var zTree;
+        var setting = {
+            view: {
+                selectedMulti: true
+            },
+            check: {
+                enable: true,
+                chkStyle: "checkbox",
+                chkboxType: { "Y": "s", "N": "s" }
+            },
+            data: {
+                simpleData: {
+                    enable: true,
+                    idKey: "DeptNo",
+                    pIdKey: "ParentDeptNo",
+                    rootPId: 0
+                }
+				,
+                key: {
+                    checked: "checked",
+                    name: "DeptName",
+                    id: "DepartOnlyCode"
+                }
+            },
+            edit: {
+                enable: false
+            },
+        };
+        PublicComm.Ajax("POST", url, null, true, function (result) {
+            zTree = $.fn.zTree.init(element, setting, result.Data);
+            if (!!arrDept) {
+                for (var i = 0; i < arrDept.length; i++) {
+                    var node = zTree.getNodeByParam("DepartOnlyCode", arrDept[i]);
+                    if (node != null) {
+                        zTree.checkNode(node, true);
+                    }
+                };
+            }
+            zTree.expandAll(true);
+        });
+    },
+}

@@ -1,0 +1,107 @@
+﻿using Dapper;
+using ERP.Authority.Entity.SDTM;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.DAL
+{
+    public class Priv_PositionDAL
+    {
+        public int UpdatePrivToPosition(Priv_Position p_Position)
+        {
+            string sql = @"IF EXISTS ( SELECT  1
+                            FROM    Priv_Position
+                            WHERE   PositionCode = @PositionCode
+                                    AND [PlatForm] = @PlatForm
+                                    AND IsDel = 0 )
+                    BEGIN
+                        UPDATE  dbo.Priv_Position
+                        SET     ModulePrivList = @ModulePrivList ,
+                                ModDate = @ModDate
+                        WHERE   PositionCode = @PositionCode
+                                AND [PlatForm] = @PlatForm
+                                AND IsDel = 0
+                    END;
+                ELSE
+                    BEGIN
+                        INSERT  INTO Priv_Position
+                                ( PositionCode ,
+                                  Modifier ,
+                                  PlatForm ,
+                                  ModulePrivList ,
+                                  ModDate
+                                )
+                        VALUES  ( @PositionCode ,
+                                  @Modifier ,
+                                  3 ,
+                                  @ModulePrivList ,
+                                  @ModDate
+                                );
+                    END";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Execute(sql, p_Position);
+            }
+        }
+        public dynamic GetPrivModuleByPosition(Priv_Position p_Position)
+        {// @PositionCodes
+            string sql = @"
+SELECT  ModulePrivList ,
+                DataPrivJson
+        FROM    dbo.Priv_Position
+        WHERE   PositionCode = @PositionCode
+                AND PlatForm = @PlatForm
+                AND IsDel = 0";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<dynamic>(sql, p_Position).FirstOrDefault();
+            }
+        }
+        /// <summary>
+        /// 员工管理 保存权限到职务 数据权限 模块权限
+        /// </summary>
+        /// <param name="p_Position"></param>
+        /// <returns></returns>
+        public int UpdateUplusPositionPrivilege(Priv_Position p_Position)
+        {
+            string sql = @"IF EXISTS ( SELECT  1
+                            FROM    Priv_Position
+                            WHERE   PositionCode = @PositionCode
+                                    AND [PlatForm] = @PlatForm
+                                    AND IsDel = 0 )
+                    BEGIN
+                        UPDATE  dbo.Priv_Position
+                        SET     ModulePrivList = @ModulePrivList ,
+                                ModDate = @ModDate
+                        WHERE   PositionCode = @PositionCode
+                                AND [PlatForm] = @PlatForm
+                                AND IsDel = 0
+                    END;
+                ELSE
+                    BEGIN
+                        INSERT  INTO Priv_Position
+                                ( PositionCode ,
+                                  Creator ,
+                                  PlatForm ,
+                                  ModulePrivList ,
+                                  DataPrivJson ,
+                                  CreateDate
+                                )
+                        VALUES  ( @PositionCode ,
+                                  @Creator ,
+                                  @PlatForm ,
+                                  @ModulePrivList ,
+                                  @DataPrivJson ,
+                                  @CreateDate
+                                );
+                    END";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Execute(sql, p_Position);
+            }
+        }
+    }
+}

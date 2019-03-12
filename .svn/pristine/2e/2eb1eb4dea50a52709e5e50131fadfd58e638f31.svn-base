@@ -1,0 +1,126 @@
+﻿using ERP.Authority.DAL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+using ERP.Authority.General;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace ERP.Authority.BLL
+{
+    public class Priv_EmployeeBLL
+    {
+        public ResultModel<object> MultiUpdatePrivToEmp(MultiList multiList, UserInfoForCookie user)
+        {
+            var msg = new ResultModel<object>();
+            var listInsertPrivEmployee = new List<Priv_Employee>();
+            E_Employee e_Employee = new E_Employee();
+            e_Employee.PositionID = multiList.PositionID;
+            e_Employee.CityID = multiList.CityID;
+            var e_EmployeeList = new E_EmployeeBLL().GetAllEmpByPositionID(e_Employee);
+            List<int> allempcodelist = new List<int>();// 一个部门的 DataCode
+            e_EmployeeList.ForEach(p => allempcodelist.Add(p.EmpCode));
+            var existempcode = new Priv_EmployeeDAL().GetDistinctEmpCode(multiList.CityID, multiList.PlatForm);
+            var insertList = allempcodelist.Except(existempcode).ToList();
+            List<int> updateList = allempcodelist.Intersect(existempcode).ToList();
+            listInsertPrivEmployee = listInsertPrivEmployee.Union(insertList.Select(empcode => new Priv_Employee()
+            {
+                EmpCode = empcode,
+                CityID = Convert.ToByte(multiList.CityID),
+                PlatForm = Convert.ToByte(multiList.PlatForm),
+                ModulePrivList = multiList.ModulePrivList,
+                DataPrivJson = multiList.DataPrivJson == null ? "{}" : multiList.DataPrivJson,
+            })).ToList();
+            new Priv_EmployeeDAL().MultiUpdatePrivToEmp(listInsertPrivEmployee.ToDataTable(), updateList, multiList, user);
+            return msg;
+        }
+        /// <summary>
+        /// 通过城市、平台获取员工权限
+        /// </summary>
+        /// <param name="privEmployee"></param>
+        /// <returns></returns>
+        public ResultModel<Priv_Employee> GetPrivEmployeeByEmployee(Priv_Employee privEmployee)
+        {
+            var msg = new ResultModel<Priv_Employee>();
+            if (privEmployee.CityID == 0)
+            {
+                msg.Code = 2001;
+                msg.Message = "城市错误";
+                return msg;
+            }
+            if (privEmployee.PlatForm == 0)
+            {
+                msg.Code = 2001;
+                msg.Message = "平台错误";
+                return msg;
+            }
+            if (privEmployee.EmpCode == 0)
+            {
+                msg.Code = 2001;
+                msg.Message = "员工Code错误";
+                return msg;
+            }
+            msg.Data = new Priv_EmployeeDAL().GetPrivEmployeeByEmployee(privEmployee);
+            return msg;
+        }
+
+
+        /// <summary>
+        /// 复制管辖权限到员工
+        /// </summary>
+        /// <param name="privEmployeeData"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public ResultModel<object> CopyDeptToEmp(Priv_EmployeeDataNew priv_EmployeeDataNew, UserInfoForCookie user)
+        {
+            var msg = new ResultModel<object>();
+            if (priv_EmployeeDataNew.EmpCodeList == null)
+            {
+                msg.Code = 2001;
+                msg.Message = "未选择员工或员工数据异常！";
+                return msg;
+            }
+            Priv_DepartmentDAL privDepartmentDal = new Priv_DepartmentDAL();
+            Priv_EmployeeDAL privEmployeeDAL = new Priv_EmployeeDAL();
+            Priv_DepartmentData priv_DepartmentData = new Priv_DepartmentData();
+            priv_DepartmentData.DepartOnlyCode = priv_EmployeeDataNew.DepartOnlyCode;
+            priv_DepartmentData.CityID = priv_EmployeeDataNew.CityID;
+            priv_DepartmentData.TypeCodeList = new List<string>() { "dep-divisition-sel" };//默认门店数据权限为行政管辖
+            var listPrivDepartment = privDepartmentDal.GetPrivDepartmentList(priv_DepartmentData);
+            var listPrivEmployee = privEmployeeDAL.PrivEmployeeDataDepCodeList(priv_EmployeeDataNew);
+            var listInsertPrivEmployee = new List<Priv_Employee_Data>();
+            var dicSelected = new Dictionary<int, List<int>>();
+            var dicCancel = new Dictionary<int, List<int>>();
+
+            foreach (var empCode in priv_EmployeeDataNew.EmpCodeList)//遍历页面所选择的人员信息集合List
+            {
+                List<int> allPrivEmployee = new List<int>();//员工数据权限表数据库所有数据
+                List<int> allPrivDepartment = new List<int>();//门店管辖数据权限表数据库所有数据
+                listPrivEmployee.FindAll(item => item.EmpCode == empCode).ForEach(item => allPrivEmployee.Add(item.DepartOnlyCode));
+                var typeCode = "dep-divisition-sel";
+                listPrivDepartment.FindAll(item => item.TypeCode == typeCode).ForEach(item => allPrivDepartment.Add(item.DataCode));
+                List<int> paramList;
+                paramList = allPrivDepartment;
+                //新增：勾选的数据与数据库所有数据的差集
+                List<int> listInsert = paramList.Except(allPrivEmployee).ToList();
+                listInsertPrivEmployee = listInsertPrivEmployee.Union(listInsert.Select(departOnlyCode => new Priv_Employee_Data()
+                {
+                    DepartOnlyCode = departOnlyCode,
+                    CityID = priv_EmployeeDataNew.CityID,
+                    PlatForm = 0,
+                    EmpCode = empCode,
+                    Creator = user.EmpCode,
+                })).ToList();
+                //修改：为已选择的数据，勾选的数据与数据库所有数据的交集
+                List<int> listSelected = paramList.Intersect(allPrivEmployee).ToList();
+                //修改：为未选择的数据，数据库所有数据与已选择数据的差集
+                List<int> listCancel = allPrivEmployee.Except(listSelected).ToList();
+                dicSelected.Add(empCode, listSelected);
+                dicCancel.Add(empCode, listCancel);
+            }
+            privEmployeeDAL.CopyDeptToEmp(priv_EmployeeDataNew, listInsertPrivEmployee.ToDataTable(), dicSelected, dicCancel, user);
+            return msg;
+
+        }
+    }
+}

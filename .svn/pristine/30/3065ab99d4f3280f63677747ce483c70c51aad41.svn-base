@@ -1,0 +1,40 @@
+﻿using ERP.Authority.DAL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.BLL
+{
+    public class Priv_EmployeeBLL
+    {
+        public ResultModel<object> MultiUpdatePrivToEmp(List<MultiList> multiLists)
+        {
+            bool flag = true;
+            bool result = false;
+            foreach (var item in multiLists)
+            {
+                result = new Priv_EmployeeDAL().MultiUpdatePrivToEmp(item.EmpCode, item.ModuleList) > 0 ? true : false;
+                if (!result)
+                {
+                    flag = false;
+                }
+            }            
+            if (flag)
+            {
+                return new ResultModel<object>() { };
+            }
+            else
+            {
+                return new ResultModel<object>() { Code = 2001, Message = "更新失败" };
+            }
+        }
+        public List<Priv_Employee> GetPriv_EmployeeByEmpCode(int empcode)
+        {
+            return new Priv_EmployeeDAL.GetPriv_EmployeeByEmpCode(empcode);
+        }
+    }
+}

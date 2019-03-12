@@ -1,0 +1,68 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.DAL
+{
+    public class Utility
+    {
+        public static void BulkToDB(DataTable dt)
+        {
+            SqlConnection sqlConn = AdoConfig.GetDBConnection();
+            SqlBulkCopy bulkCopy = new SqlBulkCopy(sqlConn);
+            bulkCopy.ColumnMappings.Add("EmpCode", "EmpCode");
+            bulkCopy.ColumnMappings.Add("PlatForm", "PlatForm");
+            bulkCopy.ColumnMappings.Add("CityID", "CityID");
+            bulkCopy.ColumnMappings.Add("DepartOnlyCode", "DepartOnlyCode");
+            bulkCopy.ColumnMappings.Add("ModDate", "ModDate");
+            bulkCopy.ColumnMappings.Add("Modifier", "Modifier");
+            bulkCopy.ColumnMappings.Add("IsDel", "IsDel");
+            bulkCopy.ColumnMappings.Add("Creator", "Creator");
+            bulkCopy.ColumnMappings.Add("CreateDate", "CreateDate");
+            bulkCopy.DestinationTableName = "Priv_Employee_Data";
+            bulkCopy.BatchSize = dt.Rows.Count;
+            try
+            {
+                if (sqlConn.State == ConnectionState.Closed)
+                {
+                    sqlConn.Open();
+                }                    
+                if (dt != null && dt.Rows.Count != 0)
+                {
+                    bulkCopy.WriteToServer(dt);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                sqlConn.Close();
+                if (bulkCopy != null)
+                    bulkCopy.Close();
+            }
+        }
+        public static DataTable GetTableSchema()
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.AddRange(new DataColumn[]{
+        new DataColumn("EmpCode",typeof(int)),
+        new DataColumn("PlatForm",typeof(int)),
+    new DataColumn("CityID",typeof(int)),
+    new DataColumn("IsDel",typeof(int)),
+    new DataColumn("DepartOnlyCode",typeof(int)),
+    new DataColumn("Creator",typeof(int)),
+    new DataColumn("Modifier",typeof(int)),
+    new DataColumn("ModDate",typeof(DateTime)),
+    new DataColumn("CreateDate",typeof(DateTime))
+            });
+            return dt;
+        }
+
+    }
+}

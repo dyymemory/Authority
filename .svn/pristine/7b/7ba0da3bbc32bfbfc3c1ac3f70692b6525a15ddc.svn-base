@@ -1,0 +1,23 @@
+﻿using Dapper;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.DAL
+{
+    public class Priv_EmployeeDAL
+    {
+        public int MultiUpdatePrivToEmp(int empcode, string modulePrivList)
+        {
+            string sql = @"UPDATE   dbo.Priv_Employee
+                   SET      ModulePrivList = @ModulePrivList,ModDate=@ModDate
+                   WHERE    EmpCode = @EmpCode";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Execute(sql, new { EmpCode = empcode, ModulePrivList = modulePrivList, });
+            }
+        }
+    }
+}

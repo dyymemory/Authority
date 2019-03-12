@@ -1,0 +1,25 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Web.Http;
+using ERP.Authority.BLL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+
+namespace ERP.Authority.API.Controllers.V1
+{
+    public class PositionController : ApiController
+    {
+        /// <summary>
+        /// 获取所有职位列表
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<List<E_Position>> GetAllPositionList()
+        {
+            return new E_PositionBLL().GetAllPositionList();
+        }
+    }
+}

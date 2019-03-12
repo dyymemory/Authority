@@ -1,0 +1,26 @@
+﻿var EmployeeEditCity = {
+    Init: function () {
+        layui.use('form', function () {
+            var form = layui.form;
+            EmployeeEditCity.InitCity(form);
+        });
+    },
+    InitCity: function (form) {
+        PublicComm.Ajax("POST", "/Authority/City/GetAllCityList", null, true, function (result) {
+            var strHTML = '';
+            for (var index in result.Data) {
+                strHTML += '<div class="layui-col-md3">';
+                strHTML += '<input type="checkbox" value="' + result.Data[index].CityID + '" lay-skin="primary" title="' + result.Data[index].CityName + '">';
+                strHTML += '</div>';
+            }
+            debugger;
+            $('#chkCity').html(strHTML);
+            form.render();
+        });
+    },
+}
+
+$(function () {
+    debugger;
+    EmployeeEditCity.Init();
+});

@@ -1,0 +1,20 @@
+﻿/*权限*/
+var PrivComm = {
+    SystemPrivUser: {},//登录员工权限管理系统权限
+    Init: function () {
+        var user = CacheHelper.GetUser();
+        var param = {};
+        param.CityID = user.CityID;
+        param.EmpCode = user.EmpCode;
+        param.PlatForm = 3;
+        PublicComm.Ajax("POST", "/Authority/Privilege/GetPrivEmployeeByEmployee", param, false, function (result) {
+            if (result.Code == 2000) {
+                PrivComm.SystemPrivUser = result.Data;
+            }
+        });
+    },
+}
+
+$(function () {
+    PrivComm.Init();
+});

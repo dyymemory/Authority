@@ -1,0 +1,29 @@
+﻿var CacheHelper = {
+    GetCity: function () {
+        return layui.sessionData('city').city;
+    },
+    SetCity: function (data) {
+        layui.sessionData('city', { key: 'city', value: data });
+    },
+    ClearCity: function () {
+        layui.sessionData('city', null);
+    },
+    GetDepartment: function (cityid) {
+        return layui.sessionData('department')[cityid];
+    },
+    SetDepartment: function (cityid, data) {
+        layui.sessionData('department', { key: cityid, value: data });
+    },
+    ClearDepartment: function () {
+        layui.sessionData('department', null);
+    },
+    GetPosition: function (cityid) {
+        return layui.sessionData('position')[cityid];
+    },
+    SetPosition: function (cityid, data) {
+        layui.sessionData('position', { key: cityid, value: data });
+    },
+    ClearPosition: function () {
+        layui.sessionData('position', null);
+    },
+}

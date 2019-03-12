@@ -1,0 +1,122 @@
+﻿<link rel="stylesheet" href="../../Content/ztree/metroStyle/hjc.min.css" media="all">
+<link rel="stylesheet" href="../../Content/ztree/metroStyle/metroStyle.css" media="all">
+<style>
+	.layui-form .layui-form-item .layui-input-block .layui-btn {
+		width: 140px;
+	}
+	#systree {
+		width: 300px;
+		height: 600px;
+		overflow: auto;
+	}
+</style>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+	<legend>系统设置</legend>
+</fieldset>
+<form class="layui-form" action="">
+	<div class="layui-form-item">
+	</div>
+</form>
+<form class="layui-form" action="">
+	<div class="layui-form-item">
+		<div class="layui-col-xs8">
+			<div class="layui-input-block">
+				<button class="layui-btn" lay-submit="" lay-filter="demo1" style="">查询</button>
+				<button class="layui-btn">职务授权</button>
+				<button class="layui-btn">保存权限到员工</button>
+				<button class="layui-btn">保存权限到职务</button>
+			</div>
+		</div>
+	</div>
+	<div class="div1 layui-form-item">
+		<div class="layui-row">
+			<div class="layui-input-inline">
+				<button class="layui-btn" style="margin-left:10px">员工权限</button>
+				<button class="layui-btn">门店权限</button>
+				<button class="layui-btn">职位权限</button>
+				<button class="layui-btn">系统设置</button>
+			</div>
+		</div>
+	</div>
+	<div class="div2 layui-form-item">
+		<div class="setting-equal">
+			<div id="systree" class="ztree ztree3"></div>
+		</div>
+	</div>
+</form>
+<style>
+	div.div1 {
+		float: left
+	}
+
+	.layui-btn {
+		margin: 5px 5px
+	}
+
+	.layui-form-item {
+		clear: none
+	}
+	.layui-table {
+		width: 60%
+	}
+	div.div2 {
+		float: left
+	}
+</style>
+<script src="../../Content/ztree/jquery.ztree.all.min.js" charset="utf-8"></script>
+<script src="../../Content/treetable/jquery.treetable.js" charset="utf-8"></script>
+<script src="../../Content/jscustomer/SysNodeTree.js" charset="utf-8"></script>
+<script>	
+	layui.use('form', function () {
+		var form = layui.form;
+		form.render();
+	});
+	$(function () {
+		var setting = {
+			view: {
+				selectedMulti: true
+			},
+			check: {
+				enable: true,
+				chkStyle: "checkbox",
+				chkboxType: { "Y": "ps", "N": "ps" }
+			},
+			data: {
+				simpleData: {
+					enable: true,
+					idKey: "ID",
+					pIdKey: "ParentID",
+					rootPId: 0
+				}
+				,
+				key: {
+					checked: "checked",
+					name: "Name",
+					id: "ID"
+				}
+			},
+			edit: {
+				enable: false
+			}
+		};
+		var zTreeNodes = [
+			{ ID: 0, ParentID: 0, Name: "权限管理系统" },
+			{ ID: 1, ParentID: 0, Name: "员工权限" },
+			{ ID: 2, ParentID: 0, Name: "门店权限"},
+			{ ID: 3, ParentID: 0, Name: "职位权限" },
+			{ ID: 4, ParentID: 0, Name: "系统设置" },
+			{ ID: 5, ParentID: 1, Name: "查询"},
+			{ ID: 6, ParentID: 1, Name: "查看" },
+			{ ID: 7, ParentID: 1, Name: "权限设置"},
+			{ ID: 8, ParentID: 1, Name: "跨城市权限设置" },
+			{ ID: 9, ParentID: 7, Name: "城市权限设置" },
+			{ ID: 10, ParentID: 7, Name: "模块权限设置"  },
+			{ ID: 11, ParentID: 7, Name: "数据权限设置" },
+			{ ID: 12, ParentID: 7, Name: "门店管辖设置" },
+			{ ID: 13, ParentID: 7, Name: "保存权限到员工" },
+			{ ID: 14, ParentID: 7, Name: "保存权限到职务" },
+		];
+		var zTreeNodes = SysNodeTree.BuildJsonDate(zTreeNodes);
+		$.fn.zTree.init($("#systree"), setting, zTreeNodes);		
+	});	
+</script>

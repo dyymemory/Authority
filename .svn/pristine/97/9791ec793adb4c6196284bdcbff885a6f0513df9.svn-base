@@ -1,0 +1,39 @@
+﻿using Dapper;
+using ERP.Authority.Entity.SDTM;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.DAL
+{
+    public class Priv_DepartmentDAL
+    {
+        /// <summary>
+        /// 获取门店权限
+        /// </summary>
+        /// <param name="privDepartment"></param>
+        /// <returns></returns>
+        public List<dynamic> GetPrivDepartmentList(Priv_Department privDepartment)
+        {
+            StringBuilder sql = new StringBuilder(@"
+SELECT  DepartOnlyCode ,
+        CityID ,
+        PlatForm ,
+        TypeCode ,
+        DataCode
+FROM    dbo.Priv_Department (NOLOCK)
+WHERE   DepartOnlyCode = @DepartOnlyCode
+        AND IsDel = 0 ");
+            if (!string.IsNullOrEmpty(privDepartment.TypeCode))
+            {
+                sql.Append(" AND TypeCode = @TypeCode ");
+            }
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<dynamic>(sql.ToString(), privDepartment).ToList();
+            }
+        }
+    }
+}

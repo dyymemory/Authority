@@ -1,0 +1,130 @@
+﻿var DepartmentIndex = {
+    TabType1: true,//U+门前权限第一次加载
+    TabType2: true,//U+地理权限第一次加载
+    TabJurisdiction1: true,//门店管辖-能看我的第一次加载
+    TabDept1: true,//U+门前权限-能看我的第一次加载
+    TabArea1: true,//U+地理权限-能看我的第一次加载
+    CacheDepartment:[],//部门缓存
+    Init: function () {
+        layui.use(['element', 'form', 'layer'], function () {
+            var element = layui.element,
+                form = layui.form,
+                layer = layui.layer;
+
+            $('.site-demo-active').on('click', function () {
+                var othis = $(this), type = othis.data('type');
+                active[type] ? active[type].call(this, othis) : '';
+            });
+
+            form.render();
+            ControlComm.CityBinding($('#City'), form);
+            ControlComm.DepartmentBinding($('#Department'), form);
+            ControlComm.CityBinding($('#CityJurisdictionCanSee'), form);
+            ControlComm.DepartmentBinding($('#DepartmentJurisdictionCanSee'), form);
+
+            ControlComm.GetDeptTree($('#TreeJurisdictionCanSee'), '/Authority/Department/GetAllDepartmentList');
+
+            $('#Search').on('click', function () {
+                var param = {};
+                if (!$('#City').val()) {
+                    layer.msg("请选择城市");
+                    return;
+                } else {
+                    param.CityID = $('#City').val();
+                }
+                DepartmentIndex.GetDeptTreeNoCheck($('#deptTree'), param);
+            });
+
+            //一些事件监听
+            element.on('tab(TabType)', function (data) {
+                //U+门店权限-我能看的
+                if (DepartmentIndex.TabType1 && data.index == 1) {
+                    ControlComm.CityBinding($('#CityDeptCanSee'), form);
+                    ControlComm.DepartmentBinding($('#DepartmentDeptCanSee'), form);
+                    DepartmentIndex.TabType1 = false;
+                }
+                    //U+地理权限-我能看的
+                else if (DepartmentIndex.TabType2 && data.index == 2) {
+                    ControlComm.CityBinding($('#CityAreaCanSee'), form);
+                    ControlComm.DepartmentBinding($('#DepartmentAreaCanSee'), form);
+                    DepartmentIndex.TabType2 = false;
+                }
+            });
+
+            //管辖权限--能看我的
+            element.on('tab(TabJurisdiction)', function (data) {
+                if (DepartmentIndex.TabJurisdiction1 && data.index == 1) {
+                    ControlComm.CityBinding($('#CityJurisdictionBeSeen'), form);
+                    ControlComm.DepartmentBinding($('#DepartmentJurisdictionBeSeen'), form);
+                    ControlComm.GetDeptTree($('#TreeJurisdictionBeSeen'), '/Authority/Department/GetAllDepartmentList');
+                    DepartmentIndex.TabJurisdiction1 = false;
+                }
+            });
+
+            //U+门店权限--能看我的
+            element.on('tab(TabDept)', function (data) {
+                if (DepartmentIndex.TabDept1 && data.index == 1) {
+                    ControlComm.CityBinding($('#CityDeptBeSeen'), form);
+                    ControlComm.DepartmentBinding($('#DepartmentDeptBeSeen'), form);
+                    DepartmentIndex.TabDept1 = false;
+                }
+            });
+
+            //U+地理权限--能看我的
+            element.on('tab(TabArea)', function (data) {
+                if (DepartmentIndex.TabArea1 && data.index == 1) {
+                    ControlComm.CityBinding($('#CityAreaBeSeen'), form);
+                    ControlComm.DepartmentBinding($('#DepartmentAreaBeSeen'), form);
+                    DepartmentIndex.TabArea1 = false;
+                }
+            });
+        });
+    },
+    GetDeptTreeNoCheck: function (element, param) {
+        var zTree;
+        var setting = {
+            view: {
+                selectedMulti: true
+            },
+            check: {
+                enable: false,
+                chkStyle: "checkbox",
+                chkboxType: { "Y": "ps", "N": "ps" }
+            },
+            data: {
+                simpleData: {
+                    enable: true,
+                    idKey: "DeptNo",
+                    pIdKey: "ParentDeptNo",
+                    rootPId: 0
+                }
+				,
+                key: {
+                    checked: "checked",
+                    name: "DeptName",
+                    id: "DepartOnlyCode"
+                }
+            },
+            edit: {
+                enable: false
+            },
+            callback: {    //第一步
+                onClick: zTreeOnClick
+            }
+        };
+
+        PublicComm.Ajax("POST", '/Authority/Department/GetDepartmentListByCity', param, true, function (result) {
+            DepartmentIndex.CacheDepartment = result.Data;
+            zTree = $.fn.zTree.init(element, setting, DepartmentIndex.CacheDepartment);
+            zTree.expandAll(true);
+        });
+
+        function zTreeOnClick(event, treeId, treeNode) {
+            console.log(treeNode);
+        };
+    },
+}
+
+$(function () {
+    DepartmentIndex.Init();
+});

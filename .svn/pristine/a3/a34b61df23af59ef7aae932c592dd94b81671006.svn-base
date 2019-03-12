@@ -1,0 +1,37 @@
+﻿using Dapper;
+using ERP.Authority.Entity.SDTM;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.DAL
+{
+    public class Priv_Employee_DataDAL
+    {
+        public List<dynamic> GetDepartPrivByEmployee(Priv_Employee_Data priv_Employee_Data)
+        {
+            string sql = @"
+SELECT  DeptName ,
+        Header ,
+        DeptNo ,
+        CityID ,
+        DeptID ,
+        DepartOnlyCode ,
+        ISNULL(Layer, 1) AS Layer ,
+        CASE WHEN ISNULL(Layer, 1) > 1
+             THEN SUBSTRING(DeptNo, 0, ISNULL(Layer, 1) * 2 - 1)
+             ELSE ''
+        END AS ParentDeptNo
+FROM    dbo.E_Department D ( NOLOCK )
+WHERE   D.FlagTrashed = 0
+        AND D.FlagDeleted = 0
+ORDER BY D.DeptNo ASC;";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<dynamic>(sql).ToList();
+            }
+        }
+    }
+}

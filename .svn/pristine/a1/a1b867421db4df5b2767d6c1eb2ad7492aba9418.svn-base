@@ -1,0 +1,38 @@
+﻿using System.Collections.Generic;
+using ERP.Authority.DAL;
+using ERP.Authority.Entity.SDTMComm;
+using ERP.Authority.Entity.SDTM;
+
+namespace ERP.Authority.BLL
+{
+    public class E_DepartmentBLL
+    {
+        /// <summary>
+        /// 获取所有部门列表并按照父子顺序排序
+        /// </summary>
+        /// <returns></returns>
+        public ResultModel<List<dynamic>> GetAllDepartmentList()
+        {
+            return new ResultModel<List<dynamic>>() { Data = new E_DepartmentDAL().GetAllDepartmentList() };
+        }
+
+        /// <summary>
+        /// 根据城市获取部门列表并按照父子顺序排序
+        /// </summary>
+        /// <returns></returns>
+        public ResultModel<List<dynamic>> GetDepartmentListByCity(E_Department department)
+        {
+            return new ResultModel<List<dynamic>>() { Data = new E_DepartmentDAL().GetDepartmentListByCity(department) };
+        }
+
+        /// <summary>
+        /// 获取部门U+数据权限
+        /// </summary>
+        /// <param name="department"></param>
+        /// <returns></returns>
+        public ResultModel<List<dynamic>> GetDeptPrivTreeTable(E_Department department)
+        {
+            return new ResultModel<List<dynamic>>() { Data = new E_DepartmentDAL().GetDeptPrivTreeTable(department) };
+        }
+    }
+}

@@ -1,0 +1,30 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using Dapper;
+using ERP.Authority.Entity.SDTM;
+
+namespace ERP.Authority.DAL
+{
+    public class B_CityDAL
+    {
+        /// <summary>
+        /// 获取所有城市列表
+        /// </summary>
+        /// <returns></returns>
+        public List<B_City> GetAllCityList()
+        {
+            string sql = @"
+SELECT  CityID ,
+        CityName ,
+        PinYin ,
+        ProvincesID
+FROM    dbo.B_City ( NOLOCK )
+WHERE   IsDel = 0
+ORDER BY Sort ASC;";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<B_City>(sql).ToList();
+            }
+        }
+    }
+}

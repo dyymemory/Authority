@@ -1,0 +1,51 @@
+﻿var EmployeeEdit = {
+    Employee: window.parent.EmployeeIndex.SelectedData,
+    Init: function () {
+        layui.use(['element', 'form'], function () {
+            var element = layui.element,
+                form = layui.form;
+            form.render();
+            $('.site-demo-active').on('click', function () {
+                var othis = $(this), type = othis.data('type');
+                active[type] ? active[type].call(this, othis) : '';
+            });
+            ControlComm.CityBinding($('#City'), form, EmployeeEdit.Employee.CityID);
+            ControlComm.DepartmentBinding($('#Department'), form);
+            ControlComm.DataPermissionsBinding($('#DataPermissions'), form);
+            EmployeeEdit.LoadPrivModule(form);
+            ControlComm.GetDeptTree($('#DepartmentPermissions'), '/Authority/Department/GetAllDepartmentList');
+        });
+    },
+    SaveData: function () {
+        var user = layui.sessionData('sessionStorage').user;
+        var param = {};
+    },
+    LoadPrivModule: function (form) {
+        $('#DataPermissions input:radio').prop('checked', false);
+        var param = {};
+        param.EmpCode = EmployeeEdit.Employee.EmpCode;
+        param.PlatForm = $('input:radio[name=platform]').val();
+        PublicComm.Ajax("POST", "/Authority/Privilege/GetPrivModuleByEmployee", param, true, function (result) {
+            var modulePrivList = '';
+            if (!!result.Data) {
+                layui.each(ControlComm.DataPermissions, function () {
+                    var value = result.Data.DataPrivJson[this.name];
+                    value = !!value ? value : 0;
+                    $('#DataPermissions input:radio[name=' + this.name + '][value=' + value + ']').prop('checked', true);
+                });
+                modulePrivList = result.Data.ModulePrivList;
+            } else {
+                layui.each(ControlComm.DataPermissions, function () {
+                    $('#DataPermissions input:radio[name=' + this.name + '][value=0]').prop('checked', true);
+                });
+                
+            }
+            form.render('radio');
+            ControlComm.GetPrivTree($('#Modular'), '/Authority/Privilege/GetAllModulePrivilegeList', modulePrivList);
+        });
+    },
+}
+
+$(function () {
+    EmployeeEdit.Init();
+});

@@ -1,0 +1,104 @@
+﻿using Dapper;
+using ERP.Authority.Entity.SDTM;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.DAL
+{
+    public class Priv_DepartmentDAL
+    {
+        /// <summary>
+        /// 获取门店权限
+        /// </summary>
+        /// <param name="privDepartmentData"></param>
+        /// <param name="isContainDel"></param>
+        /// <returns></returns>
+        public List<dynamic> GetPrivDepartmentList(Priv_DepartmentData privDepartmentData, bool isContainDel = false)
+        {
+            StringBuilder sql = new StringBuilder(@"
+SELECT  DepartOnlyCode ,
+        CityID ,
+        PlatForm ,
+        TypeCode ,
+        DataCode
+FROM    dbo.Priv_Department (NOLOCK)
+WHERE   DepartOnlyCode = @DepartOnlyCode
+        AND CityID = @CityID ");
+            var dyParamters = new DynamicParameters();
+            dyParamters.Add("DepartOnlyCode", privDepartmentData.DepartOnlyCode);
+            dyParamters.Add("CityID", privDepartmentData.CityID);
+            //if (!string.IsNullOrEmpty(privDepartmentData.TypeCode))
+            //{
+            //    sql.Append(" AND TypeCode = @TypeCode ");
+            //}
+            if (privDepartmentData.TypeCodeList.Count > 0)
+            {
+                sql.Append(" AND EXISTS ( SELECT 1 FROM Func_SplitToTable(@TypeCodeList, ',') t WHERE  t.value = TypeCode ) ");
+                dyParamters.Add("TypeCodeList", string.Join(",", privDepartmentData.TypeCodeList));
+            }
+            if (!isContainDel)
+            {
+                sql.Append(" AND IsDel = 0 ");
+            }
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<dynamic>(sql.ToString(), dyParamters).ToList();
+            }
+        }
+
+        /// <summary>
+        /// 保存门店管辖权限
+        /// </summary>
+        /// <param name="privDepartmentData">相关参数信息</param>
+        /// <param name="insertPrivDepartment"></param>
+        /// <param name="selectedList"></param>
+        /// <param name="cancelList"></param>
+        /// <returns></returns>
+        public void SaveDivisitionPrivDepartment(Priv_DepartmentData privDepartmentData, DataTable insertPrivDepartment, List<int> selectedList, List<int> cancelList)
+        {
+            StringBuilder updateSql = new StringBuilder();
+            DynamicParameters dyParameters = new DynamicParameters();
+            dyParameters.Add("DepartOnlyCode", privDepartmentData.DepartOnlyCode);
+            dyParameters.Add("CityID", privDepartmentData.CityID);
+            if (selectedList.Count > 0)
+            {
+                updateSql.Append(
+                    @"UPDATE Priv_Department SET IsDel = 0 WHERE IsDel = 1 AND DepartOnlyCode = @DepartOnlyCode AND CityID = @CityID AND EXISTS ( SELECT 1 FROM Func_SplitToTable(@Selected, ',') t WHERE  t.value = CAST(DataCode AS NVARCHAR(20)));");
+                dyParameters.Add("Selected", string.Join(",", selectedList));
+            }
+            if (cancelList.Count > 0)
+            {
+                updateSql.Append(
+                    @"UPDATE Priv_Department SET IsDel = 1 WHERE IsDel = 0 AND DepartOnlyCode = @DepartOnlyCode AND CityID = @CityID AND EXISTS ( SELECT 1 FROM Func_SplitToTable(@Cancel, ',') t WHERE  t.value = CAST(DataCode AS NVARCHAR(20)));");
+                dyParameters.Add("Cancel", string.Join(",", cancelList));
+            }
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                using (var tran = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        if (updateSql.Length > 0)
+                        {
+                            conn.Execute(updateSql.ToString(), dyParameters);
+                        }
+                        if (insertPrivDepartment != null && insertPrivDepartment.Rows.Count > 0)
+                        {
+                            CommonDAL.BulkCopy(conn, insertPrivDepartment, tran);
+                        }
+                        tran.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        tran.Rollback();
+                    }
+                }
+            }
+        }
+    }
+}

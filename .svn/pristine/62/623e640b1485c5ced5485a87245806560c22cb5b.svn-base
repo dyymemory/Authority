@@ -1,0 +1,190 @@
+﻿var DepartmentCopyToPosition = {
+	DepartOnlyCodeSelected: window.parent.DepartmentIndex.DepartOnlyCodeSelected,//主树选中的部门code
+	TypeCodeSelected: window.parent.DepartmentIndex.TypeCodeSelected,//radio 选中的按钮
+	ParentSelectedNodes: [],//上页树选中的节点
+	CopyedSelectedNodes: [],//要保存权限的门店集合
+	Init: function () {
+		var radios = document.getElementsByName('TypeCode');
+		// 初始化 radio 勾选状态 
+		for (var i = 0; i < radios.length; i++) {
+			if (radios[i].value == DepartmentCopyToPosition.TypeCodeSelected) {
+				radios[i].checked = true;
+				break;
+			}
+		}
+		DepartmentCopyToPosition.ParentSelectedNodes = DepartmentCopyToPosition.GetUplusCanSeeSelectedNodesByTypeCode(DepartmentCopyToPosition.TypeCodeSelected);
+		console.log(DepartmentCopyToPosition.ParentSelectedNodes);
+		var InitCityID = location.hash.substr(1);
+		layui.use(['form'], function () {
+			var form = layui.form;
+			form.render();
+			ControlComm.CityBinding($('#City'), form, InitCityID);
+			form.on('select(City)', function () {
+				ControlComm.DepartmentBinding($('#Department'), form, $('#City').val());
+				ControlComm.GetDeptTree($('#copyToDataTree'), $('#City').val());
+			});
+			form.on('select(Department)', function () {
+				var listSorted;
+				$('#Department').val() == "" ? listSorted = null : listSorted = DepartmentCopyToPosition.GetTreeListSorted($('#Department').find('option:selected').eq(0), CacheHelper.GetDepartment($('#City').val()));
+				DepartmentCopyToPosition.RefreshSelectedNodes("copyToDataTree", DepartmentCopyToPosition.CopyedSelectedNodes);
+				ControlComm.GetDeptTree($('#copyToDataTree'), $('#City').val(), DepartmentCopyToPosition.CopyedSelectedNodes, listSorted);
+			});
+			var checkednodes = [];
+			for (var i = 0; i < DepartmentCopyToPosition.ParentSelectedNodes.length; i++) {
+				checkednodes.push(DepartmentCopyToPosition.ParentSelectedNodes[i]);
+			}
+			ControlComm.DepartmentBinding($('#Department'), form, InitCityID);
+			ControlComm.GetDeptTree($('#copyToDataTree'), InitCityID);
+			ControlComm.GetDeptTreeNoCheck($('#deptDataTree'), InitCityID, checkednodes);
+			// radio  选择事件
+			form.on('radio(TypeCode)', function () {
+				var typeCode = $('input:radio[name=TypeCode]:checked').val();
+				console.log(typeCode);
+				DepartmentCopyToPosition.TypeCodeSelected = typeCode;
+				var deptDataTree = $.fn.zTree.getZTreeObj("deptDataTree");
+				if (!!deptDataTree) {
+					PublicComm.Ajax('POST', '/Authority/Privilege/GetPrivDepartmentList', { 'CityID': InitCityID, 'DepartOnlyCode': DepartmentCopyToPosition.DepartOnlyCodeSelected, 'TypeCodeList': [typeCode], 'ViewType': 1 }, true, function (result) {
+						deptDataTree.checkAllNodes(false);
+						var data = [];
+						if (!!result) {
+							for (var i = 0; i < result.Data.length; i++) {
+								var node = deptDataTree.getNodeByParam("DepartOnlyCode", result.Data[i].DataCode);
+								if (node != null) {
+									deptDataTree.checkNode(node, true);
+								}
+							};
+							data = result.Data;
+						};
+					});
+				};
+			});
+		});
+	},
+	GetUplusCanSeeSelectedNodesByTypeCode: function (typeCode) {
+		switch (typeCode) {
+			case 'dep-fy-sel':
+				return window.parent.DepartmentIndex.FySelCanSeeSelectedNodes;
+			case 'dep-cust-sel':
+				return window.parent.DepartmentIndex.CustSelCanSeeSelectedNodes;
+			case 'dep-public-owner':
+				return window.parent.DepartmentIndex.PublicOwnerCanSeeSelectedNodes;
+			case 'dep-private-owner':
+				return window.parent.DepartmentIndex.PrivateOwnerCanSeeSelectedNodes;
+			case 'dep-common-owner':
+				return window.parent.DepartmentIndex.CommonOwnerCanSeeSelectedNodes;
+			case 'dep-fy-fellow':
+				return window.parent.DepartmentIndex.FyFellowCanSeeSelectedNodes;
+			case 'dep-cust-fellow':
+				return window.parent.DepartmentIndex.CustFellowCanSeeSelectedNodes;
+		}
+		return [];
+	},
+	//选中树的节点
+	RefreshSelectedNodes: function (treeId, arr) {
+		var zTreeObj = $.fn.zTree.getZTreeObj(treeId);
+		if (!!zTreeObj) {
+			var unCheckedNodes = zTreeObj.getCheckedNodes(false);
+			layui.each(unCheckedNodes, function () {
+				if (arr.indexOf(this.DepartOnlyCode) >= 0) {
+					arr.splice(arr.indexOf(this.DepartOnlyCode), 1);
+				}
+			});
+			var checkedNodes = zTreeObj.getCheckedNodes(true);
+			layui.each(checkedNodes, function () {
+				if (arr.indexOf(this.DepartOnlyCode) == -1) {
+					arr.push(this.DepartOnlyCode);
+				}
+			});
+		}
+	},
+	///<summary>
+	///获取ztree所有父节点
+	///</summary>
+	///<param name="parentDeptNo">当前节点的parentDeptNo</param>
+	///<param name="deptList">树的所有节点</param>
+	///<param name="listSorted">返回节点集合</param>
+	///<return></return>
+	GetParentNode: function (parentDeptNo, deptList, listSorted) {
+		if (DepartmentCopyToPosition.IsContain(parentDeptNo, listSorted)) {
+			return;
+		}
+		for (var i = 0; i < deptList.length; i++) {
+			if (parentDeptNo == deptList[i].DeptNo) {
+				listSorted.push(deptList[i]);
+				DepartmentCopyToPosition.GetParentNode(deptList[i].ParentDeptNo, deptList, listSorted);
+			}
+		}
+	},
+	///<summary>
+	///获取ztree所有子节点
+	///</summary>
+	///<param name="deptno">当前节点的deptno</param>
+	///<param name="deptList">树的所有节点</param>
+	///<param name="listSorted">返回节点集合</param>
+	///<return></return>
+	GetChildNode: function (deptno, deptList, listSorted) {
+		for (var i = 0; i < deptList.length; i++) {
+			if (deptno == deptList[i].DeptNo) {
+				if (listSorted.indexOf(deptList[i]) <= 0) {
+					listSorted.push(deptList[i]);
+				}
+			}
+			if (deptno == deptList[i].ParentDeptNo) {
+				listSorted.push(deptList[i]);
+				DepartmentCopyToPosition.GetChildNode(deptList[i].DeptNo, deptList, listSorted);
+			}
+		}
+	},
+	IsContain: function (deptNo, listSorted) {
+		for (var i = 0; i < listSorted.length; i++) {
+			if (deptNo == listSorted[i].DeptNo) {
+				return true;
+			}
+		}
+		return false;
+	},
+	///<summary>
+	///获取ztree新节点
+	///</summary>
+	///<param name="dept">选择的部门</param>
+	///<param name="deptList">树的所有节点</param>
+	///<return>返回选择部门的节点集合</return>
+	GetTreeListSorted: function (dept, deptList) {
+		var listSorted = [];
+		DepartmentCopyToPosition.GetParentNode($(dept).attr('ParentDeptNo'), deptList, listSorted);
+		DepartmentCopyToPosition.GetChildNode($(dept).attr('DeptNo'), deptList, listSorted);
+		return listSorted;
+	},
+	//取消
+	Cancel: function () {
+		var Index = parent.index;
+		parent.layer.close(Index);
+	},
+	//保存
+	Confirm: function () {
+		DepartmentCopyToPosition.RefreshSelectedNodes("copyToDataTree", DepartmentCopyToPosition.CopyedSelectedNodes);
+		var DataCodeList = DepartmentCopyToPosition.ParentSelectedNodes;		
+		var DepartOnlyCodeList = DepartmentCopyToPosition.CopyedSelectedNodes;
+		var TypeCode = $('input:radio[name=TypeCode]:checked').val();
+		var param = {};
+		param.DataCodeList = DataCodeList;
+		param.DepartOnlyCodeList = DepartOnlyCodeList;
+		param.CityID = $('#City').val();
+		param.PlatForm = 1;
+		param.TypeCode = TypeCode;
+		param.ViewType = 1;
+		PublicComm.Ajax("POST", "/Authority/Privilege/CopyPrivDepartmentToOthers", param, true, function (result) {
+			if (!!result) {
+				if (result.Code == 2000) {
+					layer.alert("保存成功");
+				} else {
+					layer.alert("保存失败，原因：" + result.Message);
+				}
+			}
+		});
+	},
+
+}
+$(function () {
+	DepartmentCopyToPosition.Init();
+});

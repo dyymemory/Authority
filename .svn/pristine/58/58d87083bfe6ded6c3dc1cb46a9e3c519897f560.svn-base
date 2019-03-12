@@ -1,0 +1,184 @@
+﻿using ERP.Authority.DAL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ERP.Authority.General;
+
+namespace ERP.Authority.BLL
+{
+    public class Priv_DepartmentBLL
+    {
+        /// <summary>
+        /// 获取门店权限
+        /// </summary>
+        /// <param name="privDepartmentData"></param>
+        /// <returns></returns>
+        public ResultModel<List<dynamic>> GetPrivDepartmentList(Priv_DepartmentData privDepartmentData)
+        {
+            var msg = new ResultModel<List<dynamic>>();
+            //1.我能看的 2.能看我的
+            if (!new[] { 1, 2 }.Contains(privDepartmentData.ViewType))
+            {
+                msg.Code = 2001;
+                msg.Message = "查看类型不正确";
+                return msg;
+            }
+            if (string.IsNullOrEmpty(privDepartmentData.TypeCode) && (privDepartmentData.TypeCodeList == null || privDepartmentData.TypeCodeList.Count == 0))
+            {
+                msg.Code = 2001;
+                msg.Message = "数据类型不允许为空";
+                return msg;
+            }
+            msg.Data = new Priv_DepartmentDAL().GetPrivDepartmentList(privDepartmentData);
+            return msg;
+        }
+
+        /// <summary>
+        /// 保存门店权限
+        /// </summary>
+        /// <param name="privDepartmentData"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public ResultModel<object> SavePrivDepartment(Priv_DepartmentData privDepartmentData, UserInfoForCookie user)
+        {
+            var msg = new ResultModel<object>();
+            //1.我能看的 2.能看我的
+            if (!new[] { 1, 2 }.Contains(privDepartmentData.ViewType))
+            {
+                msg.Code = 2001;
+                msg.Message = "查看类型不正确";
+                return msg;
+            }
+            if (string.IsNullOrEmpty(privDepartmentData.TypeCode))
+            {
+                msg.Code = 2001;
+                msg.Message = "数据类型不允许为空";
+                return msg;
+            }
+            switch (privDepartmentData.TypeCode)
+            {
+                case "dep-divisition-sel":
+                    if (privDepartmentData.DepDivisitionSel == null)
+                    {
+                        msg.Code = 2001;
+                        msg.Message = "管辖权限不能为null";
+                        return msg;
+                    }
+                    break;
+                case "dep-fy-sel":
+                    if (privDepartmentData.DepFySel == null)
+                    {
+                        msg.Code = 2001;
+                        msg.Message = "查看房源不能为null";
+                        return msg;
+                    }
+                    break;
+                case "dep-cust-sel":
+                    if (privDepartmentData.DepCustSel == null)
+                    {
+                        msg.Code = 2001;
+                        msg.Message = "查看客源不能为null";
+                        return msg;
+                    }
+                    break;
+
+                case "dep-public-owner":
+                    if (privDepartmentData.DepPublicOwner == null)
+                    {
+                        msg.Code = 2001;
+                        msg.Message = "公盘看业主不能为null";
+                        return msg;
+                    }
+                    break;
+                case "dep-private-owner":
+                    if (privDepartmentData.DepPrivateOwner == null)
+                    {
+                        msg.Code = 2001;
+                        msg.Message = "私盘看业主不能为null";
+                        return msg;
+                    }
+                    break;
+                case "dep-common-owner":
+                    if (privDepartmentData.DepCommonOwner == null)
+                    {
+                        msg.Code = 2001;
+                        msg.Message = "公共池房源看业主不能为null";
+                        return msg;
+                    }
+                    break;
+                case "dep-fy-fellow":
+                    if (privDepartmentData.DepFyFellow == null)
+                    {
+                        msg.Code = 2001;
+                        msg.Message = "房源看跟进不能为null";
+                        return msg;
+                    }
+                    break;
+                case "dep-cust-fellow":
+                    if (privDepartmentData.DepCustFellow == null)
+                    {
+                        msg.Code = 2001;
+                        msg.Message = "客源跟进不能为null";
+                        return msg;
+                    }
+                    break;
+            }
+            Priv_DepartmentDAL privDepartmentDal = new Priv_DepartmentDAL();
+            var listPrivDepartment = privDepartmentDal.GetPrivDepartmentList(privDepartmentData, true);
+            //数据库所有数据
+            List<int> allPrivDepartment = new List<int>();
+            //能看我的
+            if (privDepartmentData.ViewType == 2)
+            {
+                listPrivDepartment.ForEach(item => allPrivDepartment.Add(item.DepartOnlyCode));
+            }
+            //我能看的
+            else
+            {
+                listPrivDepartment.ForEach(item => allPrivDepartment.Add(item.DataCode));
+            }
+
+            //需要新增的数据，勾选的数据与数据库所有数据的差集
+            List<int> listInsert = privDepartmentData.DepDivisitionSel.Except(allPrivDepartment).ToList();
+            DataTable insertPrivDepartment;
+            //能看我的
+            if (privDepartmentData.ViewType == 2)
+            {
+                insertPrivDepartment = listInsert.Select(departOnlyCode => new Priv_Department()
+                {
+                    DepartOnlyCode = departOnlyCode,
+                    CityID = privDepartmentData.CityID,
+                    PlatForm = 1,
+                    TypeCode = privDepartmentData.TypeCode,
+                    DataCode = privDepartmentData.DataCode,
+                    Creator = user.EmpCode
+                }).ToList().ToDataTable();
+
+            }
+            //我能看的
+            else
+            {
+                insertPrivDepartment = listInsert.Select(dataCode => new Priv_Department()
+                {
+                    DepartOnlyCode = privDepartmentData.DepartOnlyCode,
+                    CityID = privDepartmentData.CityID,
+                    PlatForm = 1,
+                    TypeCode = privDepartmentData.TypeCode,
+                    DataCode = dataCode,
+                    Creator = user.EmpCode
+                }).ToList().ToDataTable();
+            }
+            //需要修改为已选择的数据，勾选的数据与数据库所有数据的交集
+            List<int> listSelected = privDepartmentData.DepDivisitionSel.Intersect(allPrivDepartment).ToList();
+            //需要修改为未选择的数据，数据库所有数据与已选择数据的差集
+            List<int> listCancel = allPrivDepartment.Except(listSelected).ToList();
+            privDepartmentDal.SavePrivDepartment(privDepartmentData, insertPrivDepartment, listSelected, listCancel, user);
+            return msg;
+        }
+    }
+}

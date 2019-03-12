@@ -1,0 +1,63 @@
+﻿
+var CopyDeptToEmp = {
+
+
+    Init: function () {//初始化
+        debugger
+        layui.use(['table'], function () {
+            debugger
+            //var form = layui.form,
+            table = layui.table;
+            table.render();
+            var param = {};
+            param.DepartOnlyCode = 309;
+            PublicComm.Ajax("POST", "/Authority/Employee/GetDeptEmpByDepartOnlyCode", param, true, function (result) {
+                table.render({
+                    elem: '#Deptdemo',
+                    height: '400px',
+
+                    cols: [
+                        [//列表展示栏位
+                            { type: 'checkbox', fixed: 'left' },
+                            { field: 'DeptName', title: '门店名称', width: 190 },
+                            { field: 'EmpName', title: '员工姓名', width: 170 },
+                            { field: 'EmpNo', title: '员工编号', width: 170 },
+                            { field: 'PositionName', title: '员工职务', width: 170, fixed: 'right' },
+                        ]
+                    ],
+                    data: result.Data,
+                    limit: 10000, //显示的数量
+                    page: false, //是否显示分页
+                });
+                console.log(result);
+
+            });
+        });
+        //layui.use('table', function () {
+
+        //    var table = layui.table;
+        //    //监听表格复选框选择
+        //    table.on('checkbox(demo)', function (obj) {
+        //        console.log(obj);
+        //    })
+        //    table.on('', function () {
+
+        //    })
+        //})
+
+
+        $('#SaveEmpDeptTable').on('click', function () {
+            layer.msg('保存成功！');
+        });
+    },
+
+
+}
+
+
+$(function () {
+
+    CopyDeptToEmp.Init();//加载初始化
+
+})
+

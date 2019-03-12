@@ -1,0 +1,90 @@
+﻿using Dapper;
+using ERP.Authority.Entity.SDTM;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.DAL
+{
+    public class Priv_ModuleDAL
+    {
+        public List<E_MarketMenu> GetTreeList()
+        {
+            string sql = @"SELECT  ID ,
+        Name ,
+        ParentID
+FROM    dbo.E_MarketMenu
+WHERE   IsDel = 0
+ORDER BY ParentID ASC,Sort ASC
+";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<E_MarketMenu>(sql).ToList();
+            }
+        }
+        public List<Priv_Module> GetPrivilegeTreeList()
+        {
+            string sql = @"SELECT  ModuleCode ,
+        ParentCode ,
+        ModuleName
+FROM    dbo.Priv_Module
+WHERE   IsDel = 0
+        AND PlatForm = 2
+ORDER BY ParentCode ASC ,
+        Priv_ModuleID ASC";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<Priv_Module>(sql).ToList();
+            }
+        }
+        public int UpdateEmpPrivilege(string PrivList,DateTime moddate)
+        {
+            string sql = @"UPDATE   dbo.Priv_Employee
+                   SET      ModulePrivList = @ModulePrivList,ModDate=@ModDate
+                   WHERE    PrivEmployeeID = 1";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Execute(sql, new { ModulePrivList = PrivList, ModDate= moddate });
+            }
+        }
+        /// <summary>
+        /// 获取所有模块权限集合
+        /// </summary>
+        /// <returns></returns>
+        public List<Priv_Module> GetAllModulePrivilegeList()
+        {
+            List<Priv_Module> list = null;
+            try
+            {
+                string sql = @"SELECT * FROM dbo.Priv_Module WHERE IsDel=0  AND PlatForm=1 ORDER BY ParentCode ASC ,
+        Priv_ModuleID ASC";
+
+                using (var conn = AdoConfig.GetDBConnection())
+                {
+                    list = conn.Query<Priv_Module>(sql).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                list = null;
+
+            }
+            return list;
+        }
+        public List<E_EmployeeView> GetPrivByEmpCode(int empcode)
+        {
+            string sql = @"SELECT  ModulePrivList
+FROM    dbo.E_Employee ee
+        LEFT JOIN dbo.Priv_Employee pe 
+        ON pe.EmpCode = ee.EmpCode
+WHERE   ee.EmpCode = 14882
+        AND pe.IsDel = 0";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<E_EmployeeView>(sql, new { EmpCode = empcode }).ToList();
+            }
+        }
+    }
+}

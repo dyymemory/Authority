@@ -1,0 +1,6 @@
+﻿/*JS 常用控件*/
+var ControlComm = {
+    DepartmentBinding: function (CallBack) {
+        var obj = PublicComm.Ajax("POST", "/Authority/Department/GetAllDepartmentList", null, true, CallBack);
+    },
+}

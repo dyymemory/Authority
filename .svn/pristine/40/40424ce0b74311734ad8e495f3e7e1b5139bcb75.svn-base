@@ -1,0 +1,7 @@
+﻿/*JS 常用控件*/
+var ControlComm = {
+    DepartmentBinding: function () {
+        debugger;
+        var obj = PublicComm.AsyncAjax("POST", "/Department/GetAllDepartmentList");
+    },
+}

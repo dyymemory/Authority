@@ -1,0 +1,137 @@
+﻿using Dapper;
+using ERP.Authority.Entity.SDTM;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.DAL
+{
+    public class DataDepartModulePriveDAL
+    {
+        public int UpdateUplusEmpPrivilege(DataDepartModulePrive Priv)
+        {
+            int flag = 0;
+            string sql = @"IF EXISTS ( SELECT  1
+                            FROM    Priv_Employee
+                            WHERE   EmpCode = @EmpCode
+                                    AND [PlatForm] = @PlatForm
+                                    AND CityID = @CityID
+                                    AND IsDel = 0 )
+                    BEGIN
+                        UPDATE  dbo.Priv_Employee
+                        SET     ModulePrivList = @ModulePrivList ,
+                                DataPrivJson = @DataPrivJson ,
+                                Modifier = @Modifier
+                        WHERE   EmpCode = @EmpCode
+                                AND [PlatForm] = @PlatForm
+                                AND CityID = @CityID
+                                AND IsDel = 0;                        
+                    END;
+                ELSE
+                    BEGIN
+                        INSERT  INTO Priv_Employee
+                                ( EmpCode ,
+                                  Modifier ,
+                                  PlatForm ,
+                                  ModulePrivList ,
+                                  DataPrivJson
+                                )
+                        VALUES  ( @EmpCode ,
+                                  @Modifier ,
+                                  @PlatForm ,
+                                  @ModulePrivList ,
+                                  @DataPrivJson
+                                );
+                    END";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                flag = conn.Execute(sql, Priv);
+            }
+            List<int> DepartmentPriv = Priv.DepartmentPriv;//所选部门集合
+            List<NewList> result = new List<NewList>();//查询部门集合
+            List<NewList> combine = new List<NewList>();//交集
+            List<int> subtractA = new List<int>();//差集 A B
+            List<NewList> subtractB = new List<NewList>();//差集 B A
+            subtractA.AddRange(DepartmentPriv);
+            
+            string sql1 = @" SELECT PrivEmpDeptID ,
+                        DepartOnlyCode
+                 FROM   dbo.Priv_Employee_Data
+                 WHERE  EmpCode = @EmpCode
+                        AND [PlatForm] = @PlatForm
+                        AND CityID = @CityID";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                result = conn.Query<NewList>(sql1, Priv).ToList();
+            }
+            subtractB.AddRange(result);
+            foreach (var item in result)
+            {
+                for (int i = 0; i < DepartmentPriv.Count; i++)
+                {
+                    if (item.DepartOnlyCode == DepartmentPriv[i])
+                    {
+                        List<NewList> ot = new List<NewList>{
+                            new NewList(){
+                                PrivEmpDeptID =item.PrivEmpDeptID,
+                                DepartOnlyCode =item.DepartOnlyCode
+                            }
+                        };
+                        combine.AddRange(ot);//交集
+                        subtractA.Remove(item.DepartOnlyCode);//差集 A B
+                        subtractB.Remove(item);//差集  B A 
+                    }
+                }
+            }
+            UpdateExcute(combine, 0);
+            UpdateExcute(subtractB, 1);
+            InsertPrivToDB(Priv, subtractA);
+            return flag;
+        }
+        public void UpdateExcute(List<NewList> newLists,int flag)
+        {
+            string value = "";
+            foreach (var item in newLists)
+            {
+                value= string.Join(",", item.PrivEmpDeptID);
+            }
+            string sql = @"UPDATE  dbo.Priv_Employee_Data 
+SET     IsDel = @Flag
+WHERE   EXISTS ( SELECT 1
+                 FROM   Func_SplitToTable(@SplitString, ',') t
+                 WHERE  t.value = CAST(Priv_Employee_Data.PrivEmpDeptID AS NVARCHAR(10)) )";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                    var iu = conn.Execute(sql, new { @SplitString = value, Flag = flag });
+            }
+        }
+        public void InsertPrivToDB(DataDepartModulePrive Priv, List<int> InsertCodes)
+        {
+            DataTable dt = CommonDAL.GetTableSchema();
+            for (int i = 0; i < InsertCodes.Count; i++)
+            {
+                DataRow dr = dt.NewRow();
+                dr["EmpCode"] = Priv.EmpCode;
+                dr["PlatForm"] = Priv.PlatForm;
+                dr["CityID"] = Priv.CityID;
+                dr["DepartOnlyCode"] = InsertCodes[i];
+                dr["Creator"] = Priv.Creator;
+                dr["CreateDate"] = Priv.CreateDate;
+                dr["ModDate"] = Priv.ModDate;
+                dr["IsDel"] = 0;
+                dr["Modifier"] = Priv.Modifier;
+                dt.Rows.Add(dr);
+            }
+            CommonDAL.BulkToDB(dt);
+        }
+        public class NewList
+        {
+            public long PrivEmpDeptID { get; set; }
+            public int DepartOnlyCode { get; set; }
+        }
+    }
+}
+

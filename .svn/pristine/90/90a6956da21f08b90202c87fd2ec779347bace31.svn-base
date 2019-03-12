@@ -1,0 +1,35 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using Dapper;
+using ERP.Authority.Entity.SDTM;
+
+namespace ERP.Authority.DAL
+{
+    public class E_PositionDAL
+    {
+        /// <summary>
+        /// 获取所有职位列表
+        /// </summary>
+        /// <returns></returns>
+        public List<E_Position> GetAllPositionList()
+        {
+            string sql = @"
+SELECT  PositionID ,
+        PositionCode ,
+        CityID ,
+        PositionNo ,
+        PositionName ,
+        FlagSale ,
+        FlagShop ,
+        FlagZone ,
+        PositionRole
+FROM    dbo.E_Position
+WHERE   FlagDeleted = 0
+        AND FlagTrashed = 0;";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<E_Position>(sql).ToList();
+            }
+        } 
+    }
+}

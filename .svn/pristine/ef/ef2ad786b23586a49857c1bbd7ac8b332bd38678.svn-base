@@ -1,0 +1,91 @@
+﻿var EmployeeMulti = {
+	Employee: window.parent.EmployeeEdit.Employee,
+	Init: function () {
+		user = CacheHelper.GetUser();
+		var entity = parent.Parent_json;
+		layui.use(['form'], function () {
+			var form = layui.form,
+				table = layui.table;
+			form.render();
+			ControlComm.PositionBinding($('#Position'), form, EmployeeMulti.Employee.CityID, EmployeeMulti.Employee.PositionID);
+		});
+	},
+	Cancel: function () {
+		var Index = parent.index;
+		console.log(Index);
+		parent.layer.close(Index);
+	},
+	Confirm: function () {
+		var CodeJson = parent.EmployeeEdit.PositionPrivParam;
+		var JSON = EmployeeMulti.Employee;
+		console.log(JSON);
+		var positionID = $('#Position').val();
+		console.log(positionID);
+		var param = {};
+		param.ModulePrivList = CodeJson.ModulePrivList;
+		param.DataPrivJson = CodeJson.DataPrivJson;
+		param.ModDate = PublicComm.GetServeDate().Format("yyyy-MM-dd hh:mm:ss.S");
+		param.EmpCode = JSON.EmpCode;
+		param.PlatForm = JSON.PlatForm;
+		param.PositionCode = JSON.PositionCode;
+		console.log(JSON.PositionCode);
+		if (!!user) {
+			param.Modifier = user.EmpCode;
+		}
+		PublicComm.Ajax("POST", "/Authority/Privilege/UpdateUplusPositionPrivilege", param, true, function (result) {
+			if (result.Code == 2000) {
+				alert("保存成功");
+				EmployeeMulti.MultiSavePositionPrivToEmp(positionID, CodeJson);
+			}
+			else {
+				alert(result.Messege);
+			}
+		});
+	},
+	MultiSavePositionPrivToEmp: function (positionID, CodeJson) {
+		var param = {};
+		param.PositionID = positionID;
+		param.CityID = EmployeeMulti.Employee.CityID;
+		PublicComm.Ajax("POST", "/Authority/Employee/GetAllEmpByPositionID", param, true, function (result) {
+			if (result.Code == 2000) {
+				var a = new Array();
+				for (item in result.data) {
+					a.push({ EmpCode: item.EmpCode, ModuleList: CodeJson.ModulePrivList, CityID: item.CityID, PlatForm: CodeJson.PlatForm });
+				}
+				if (a.length > 0) {
+					PublicComm.Ajax("POST", "/Authority/Privilege/MultiUpdatePrivToEmp", a, true, function (result) {
+
+					});
+				}
+			}
+			else {
+				alert(result.Messege);
+			}
+		});
+	},
+	MultiSave: function (positionid, codejson) {
+		EmployeeMulti.GetAllEmpByPositionID(positionid, codejson);
+	},
+	GetAllEmpByPositionID: function (positionID, codejson) {
+		var Positionidjson = { 'PositionID': positionID, 'CityID': EmployeeMulti.Employee.CityID };
+		PublicComm.Ajax("POST", "/Authority/Employee/GetAllEmpByPositionID", Positionidjson, true, function (result) {
+			if (result.Code == 2000) {
+				var a = new Array();
+				for (item in result.data) {
+					a.push({ EmpCode: item.EmpCode, ModuleList: codejson.ModulePrivList, CityID: item.CityID, PlatForm: 3 });
+				}
+				if (a.length > 0) {
+					PublicComm.Ajax("POST", "/Authority/Privilege/MultiUpdatePrivToEmp", a, true, function (result) {
+
+					});
+				}
+			}
+			else {
+				alert(result.Messege);
+			}
+		});
+	},
+}
+$(function () {
+	EmployeeMulti.Init();
+});

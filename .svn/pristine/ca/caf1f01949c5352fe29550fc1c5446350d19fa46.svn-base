@@ -1,0 +1,57 @@
+﻿using Dapper;
+using ERP.Authority.Entity.SDTM;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.DAL
+{
+    public class Priv_EmployeeDAL
+    {
+        public int MultiUpdatePrivToEmp(int empcode, string modulePrivList)
+        {
+            string sql = "";
+            var result = GetPriv_EmployeeByEmpCode(empcode);
+            if (result.Count == 0)
+            {
+                 sql = @"INSERT dbo.Priv_Employee
+                ( EmpCode ,
+                  CityID ,
+                  PlatForm ,
+                  ModulePrivList ,
+                  IsDel ,
+                  CreateDate ,
+                  ModDate
+                )
+        VALUES  ( @EmpCode , -- EmpCode - int
+                  1 , -- CityID - smallint
+                  1 , -- PlatForm - tinyint
+                  @ModulePrivList , -- ModulePrivList - nvarchar(max)
+                  0 , -- IsDel - tinyint
+                  GETDATE() , -- CreateDate - datetime
+                  GETDATE()  -- ModDate - datetime
+                )";
+            }
+            else
+            {
+                 sql = @"UPDATE   dbo.Priv_Employee
+                   SET      ModulePrivList = @ModulePrivList,ModDate=@ModDate
+                   WHERE    EmpCode = @EmpCode";
+            }
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Execute(sql, new { EmpCode = empcode, ModulePrivList = modulePrivList, });
+            }
+        }
+        public List<Priv_Employee> GetPriv_EmployeeByEmpCode(int empcode)
+        {
+            string sql = @"SELECT * FROM dbo.Priv_Employee WHERE EmpCode=@EmpCode";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<Priv_Employee>(sql, new { EmpCode = empcode }).ToList();
+            }
+        }
+    }
+}

@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="../../Content/layui/css/layui.css" media="all" />
+	<title></title>
+</head>
+<body>
+	<style>
+		.layui-form-item {
+			margin-top: 80px;
+			margin-left: 300px;
+		}		
+	</style>
+	<form class="layui-form">
+		<div class="layui-form-item" style="margin:50px 0 0 30px ">
+			<div class="layui-col-md9">
+				<label class="layui-form-label">职位</label>
+				<div class="layui-input-inline">
+					<select id="Position" lay-search=""></select>
+				</div>
+			</div>
+		</div>
+		<div class="div1 layui-form-item">
+			<div class="layui-row ">
+				<a href="javascript:;" onclick="SystemMulti.Cancel()" class="layui-btn layui-btn-sm" >取消</a>
+				<a href="javascript:;" onclick="SystemMulti.Confirm()" class="layui-btn layui-btn-sm">确认</a>
+			</div>
+		</div>
+	</form>
+	<script src="../../Content/Jquery/jquery-1.11.3.min.js" charset="utf-8"></script>
+	<script src="../../Content/layui/layui.js" charset="utf-8"></script>
+	<script src="../../Content/jscustomer/PublicComm.js" charset="utf-8"></script>
+	<script src="../../Content/jscustomer/ControlComm.js" charset="utf-8"></script>
+	<script src="../../Content/jscustomer/systempriv/SystemMulti.js" charset="utf-8"></script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<link rel="stylesheet" href="../../Content/layui/css/layui.css" media="all" />
+	<link rel="stylesheet" href="../../Content/ztree/metroStyle/hjc.min.css" media="all" />
+	<link rel="stylesheet" href="../../Content/ztree/metroStyle/metroStyle.css" media="all" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title></title>
+</head>
+<body>
+	<style>
+		.layui-form .layui-form-item .layui-input-block .layui-btn {
+			width: 140px;
+		}
+		#systree {
+			width: 300px;
+			height: 450px;
+			overflow: auto;
+			margin-left:50px;
+		}
+	</style>
+	<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+		<legend>系统权限设置</legend>
+	</fieldset>
+	<form class="layui-form" action="">
+		<div class="div1 layui-form-item">
+			<div class="layui-row ">
+				<div class="layui-input-inline">
+					<a href="javascript:;" onclick="SaveClick()" class="layui-btn layui-btn-sm" style="margin-left:10px">职务授权</a>
+					<a href="javascript:;" onclick="SavePrivToEmp()" class="layui-btn layui-btn-sm">保存权限到员工</a>
+					<a href="javascript:;" onclick="SavePrivToPosition()" class="layui-btn layui-btn-sm">保存权限到职务</a>
+				</div>
+			</div>
+		</div>
+		<div class="div2 layui-form-item">
+			<div class="setting-equal">
+				<div id="systree" class="ztree ztree3"></div>
+			</div>
+		</div>
+	</form>
+	<style>
+		div.div1 {
+			float: right;
+			margin-right: 90px;
+			margin-top: 55px
+		}
+
+		.layui-btn {
+			margin: 15px 5px;
+			width: 130px
+		}
+
+		.layui-form-item {
+			clear: none
+		}
+
+		.layui-table {
+			width: 60%
+		}
+
+		div.div2 {
+			float: left
+		}
+	</style>
+	<script src="../../Content/Jquery/jquery-1.11.3.min.js" charset="utf-8"></script>
+	<script src="../../Content/layui/layui.js" charset="utf-8"></script>
+	<script src="../../Content/jscustomer/ControlComm.js" charset="utf-8"></script>
+	<script src="../../Content/jscustomer/PublicComm.js" charset="utf-8"></script>
+	<script src="../../Content/ztree/jquery.ztree.all.min.js" charset="utf-8"></script>
+	<script>
+		function SaveClick() {
+			alert("Success");
+			//var codes = "";
+			//var treeObj = $.fn.zTree.getZTreeObj("systree"),
+			//	nodes = treeObj.getCheckedNodes(true),
+			//	v = "";
+			//console.log(nodes);
+			//for (var i = 0; i < nodes.length; i++) {
+			//	codes += nodes[i].ModuleCode + ",";
+			//}
+			//console.log(codes.substring(0, codes.length - 1));
+			//var mod = PublicComm.GetServeDate();
+			//var moddate = mod.Format("yyyy-MM-dd hh:mm:ss.S");
+			//var codejson = { 'ModuleCode': codes.substring(0, codes.length - 1), 'ModDate': moddate };
+			//PublicComm.Ajax("POST", "/Authority/Privilege/UpdatePrivToPosition", codejson, true, function (result) {
+			//	if (result.Code == 2000) {
+			//		alert("保存成功");
+			//	}
+			//	else {
+			//		alert(result.Messege);
+			//	}
+			//});
+		};
+		function SavePrivToEmp() {
+			var codes = "";
+			var treeObj = $.fn.zTree.getZTreeObj("systree"),
+				nodes = treeObj.getCheckedNodes(true),
+				v = "";
+			console.log(nodes);
+			for (var i = 0; i < nodes.length; i++) {
+				codes += nodes[i].ModuleCode + ",";
+			}
+			console.log(codes.substring(0, codes.length - 1));
+			var mod = PublicComm.GetServeDate();
+			var moddate = mod.Format("yyyy-MM-dd hh:mm:ss.S");
+			var codejson = { 'ModuleCode': codes.substring(0, codes.length - 1), 'ModDate': moddate };
+			PublicComm.Ajax("POST", "/Authority/Privilege/UpdateEmpPrivilege", codejson, true, function (result) {
+				if (result.Code == 2000) {
+					alert("保存成功");
+				}
+				else {
+					alert(result.Messege);
+				}
+			});
+		}
+		function SavePrivToPosition() {
+			var codes = "";
+			var treeObj = $.fn.zTree.getZTreeObj("systree"),
+				nodes = treeObj.getCheckedNodes(true),
+				v = "";
+			console.log(nodes);
+			for (var i = 0; i < nodes.length; i++) {
+				codes += nodes[i].ModuleCode + ",";
+			}
+			console.log(codes.substring(0, codes.length - 1));
+			var mod = PublicComm.GetServeDate();
+			var moddate = mod.Format("yyyy-MM-dd hh:mm:ss.S");
+			var codejson = { 'ModulePrivList': codes.substring(0, codes.length - 1), 'ModDate': moddate };
+			PublicComm.Ajax("POST", "/Authority/Privilege/UpdatePrivToPosition", codejson, true, function (result) {
+				if (result.Code == 2000) {
+					alert("保存成功");
+				}
+				else {
+					alert(result.Messege);
+				}
+			});
+		}
+		$(function () {
+			ControlComm.GetPrivTree($('#systree'), "/Authority/Privilege/GetPrivilegeTreeList");
+		});
+	</script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+var TreeTableExtend = {
+    /// <summary>
+    /// 根据treetable排序规则拼写HTML
+    /// </summary>
+    BuildDataPermissionHTML: function (jsonArr) {
+        var strHTML = '';//HTML字符串
+        if (!jsonArr.length) {
+            return strHTML;
+        }
+        var listSorted = [];//根据reetable排序规则排序的json数组
+        //根据父节点升序排序，0为根节点
+        jsonArr = jsonArr.sort(function (a, b) {
+            return a.ParentID - b.ParentID;
+        });
+        //递归查找子节点
+        jsonArr.forEach(function (item) {
+            TreeTableExtend.SortNodeInfo(item, jsonArr, listSorted);
+        });
+        listSorted.forEach(function (item) {
+            strHTML += '<tr data-tt-id="' + item.ID + '"  data-tt-parent-id="' + item.ParentID + '">';
+            strHTML += '<td>' + item.DeptName + '</td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary"' + (item.IsChecked1 ? ' checked=""' : '') + '></td></td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary"' + (item.IsChecked2 ? ' checked=""' : '') + '></td></td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary"' + (item.IsChecked1 ? ' checked=""' : '') + '></td></td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary"' + (item.IsChecked2 ? ' checked=""' : '') + '></td></td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary"' + (item.IsChecked1 ? ' checked=""' : '') + '></td></td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary"' + (item.IsChecked2 ? ' checked=""' : '') + '></td></td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary"' + (item.IsChecked1 ? ' checked=""' : '') + '></td></td>';
+            strHTML += '</tr>';
+        });
+        return strHTML;
+    },
+    /// <summary>
+    /// 根据treetable排序规则递归添加json数组
+    /// </summary>
+    SortNodeInfo: function (obj, jsonArr, listSorted) {
+        //去重，已经存在直接跳过
+        if (listSorted.indexOf(obj) >= 0) {
+            return;
+        }
+        listSorted.push(obj);
+        delete jsonArr[jsonArr.indexOf(obj)];
+        if (!obj.ID) {
+            return;
+        }
+        //递归查找子节点
+        jsonArr.forEach(function (item) {
+            if (obj.ID == item.ParentID) {
+                TreeTableExtend.SortNodeInfo(item, jsonArr, listSorted);
+            }
+        });
+    },
+};

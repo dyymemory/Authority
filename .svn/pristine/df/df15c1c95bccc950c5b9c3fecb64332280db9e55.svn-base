@@ -1,0 +1,13 @@
+﻿/*JS 常用控件*/
+var ControlComm = {
+    DepartmentBinding: function (form) {
+        var obj = PublicComm.Ajax("POST", "/Authority/Department/GetAllDepartmentList", null, true, function (result, form) {
+            var strHTML = '<option value="">直接选择或搜索选择</option>';
+            for (var index in result.Data) {
+                strHTML += '<option value="' + result.Data[index].DepartOnlyCode + '">' + result.Data[index].DeptName + '</option>';
+            }
+            $('#selDepartment').html(strHTML);
+            form.render();
+        }, form);
+    },
+}

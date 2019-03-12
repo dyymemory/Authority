@@ -1,0 +1,89 @@
+﻿using Dapper;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.DAL
+{
+    public class Priv_EmployeeDAL
+    {
+        public void MultiUpdatePrivToEmp(DataTable insertdataTable, List<int> updatelist, MultiList multiList, UserInfoForCookie user)
+        {
+            StringBuilder updateSql = new StringBuilder();
+            DynamicParameters dyParameters = new DynamicParameters();
+            dyParameters.Add("CityID", multiList.CityID);
+            dyParameters.Add("PlatForm", multiList.PlatForm);
+            dyParameters.Add("ModulePrivList", multiList.ModulePrivList);
+            dyParameters.Add("DataPrivJson", multiList.DataPrivJson == null ? "{}" : multiList.DataPrivJson);
+            dyParameters.Add("Modifier", user.EmpCode);
+            if (updatelist.Count > 0)
+            {
+                updateSql.AppendFormat(
+                        @"UPDATE  dbo.Priv_Employee
+        SET     ModulePrivList = @ModulePrivList ,
+                DataPrivJson=@DataPrivJson,
+                ModDate = GETDATE() ,
+                CityID = @CityID ,
+                PlatForm = @PlatForm
+        WHERE    EXISTS ( SELECT 1
+                                             FROM   Func_SplitToTable(@Updated,
+                                                              ',') t
+                                             WHERE  t.value = CAST(Priv_Employee.EmpCode AS NVARCHAR(20)) );");
+                dyParameters.Add("Updated", string.Join(",", updatelist));
+            }
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                using (var tran = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        if (updateSql.Length > 0)
+                        {
+                            conn.Execute(updateSql.ToString(), dyParameters, tran);
+                        }
+                        if (insertdataTable != null && insertdataTable.Rows.Count > 0)
+                        {
+                            CommonDAL.BulkCopy(conn, insertdataTable, tran);
+                        }
+                        tran.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        tran.Rollback();
+                    }
+                }
+            }
+        }
+        public List<Priv_Employee> GetPriv_EmployeeByEmpCode(E_Employee e_Employee)
+        {
+            string sql = @" SELECT  *
+        FROM    dbo.Priv_Employee
+        WHERE   EmpCode = @EmpCode
+                AND CityID = @CityID
+                AND PlatForm = @PlatForm
+                AND IsDel=0";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<Priv_Employee>(sql, e_Employee).ToList();
+            }
+        }
+        public List<int> GetDistinctEmpCode(int cityid,int platform)
+        {
+            string sql = @"SELECT DISTINCT
+                ( EmpCode )
+        FROM    dbo.Priv_Employee
+        WHERE   CityID = @CityID
+                AND PlatForm = @PlatForm
+                AND IsDel = 0 ";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<int>(sql, new { CityID = cityid, PlatForm = platform }).ToList();
+            }
+        }
+    }
+}

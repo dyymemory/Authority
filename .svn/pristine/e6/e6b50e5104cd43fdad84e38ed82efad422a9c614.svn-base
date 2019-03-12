@@ -1,0 +1,419 @@
+﻿<link rel="stylesheet" href="../../Content/ztree/metroStyle/hjc.min.css" media="all">
+<link rel="stylesheet" href="../../Content/ztree/metroStyle/metroStyle.css" media="all">
+<link rel="stylesheet" href="../../Content/treetable/css/jquery.treetable.css" media="all">
+<link rel="stylesheet" href="../../Content/treetable/css/jquery.treetable.theme.default.css" media="all">
+<style>
+    .layui-btn-sm {
+        width: 100px;
+    }
+
+    #deptTree {
+        height: 572px;
+        overflow: auto;
+    }
+
+    #deptDataTree, #deptDataTreeBeSeen, #areaDataTree, #areaDataTreeBeSeen {
+        height: 320px;
+        overflow: auto;
+    }
+
+    #TreeDivisitionCanSee, #TreeDivisitionBeSeen {
+        height: 360px;
+        overflow: auto;
+    }
+
+    #treeTable thead, #treeTable tbody tr, #treeTableArea thead, #treeTableArea tbody tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    #treeTable tbody, #treeTableArea tbody {
+        display: block;
+        height: 320px;
+        overflow-y: scroll;
+    }
+
+    #treeTable thead, #treeTableArea thead {
+        width: calc( 100% - 1.4em );
+    }
+
+    .tab-style {
+        height: 500px;
+    }
+
+    .btn-style {
+        width: 80px;
+    }
+
+    #treeTable thead tr th, #treeTableArea thead tr th {
+        text-align: center;
+    }
+
+    #treeTable tbody tr :not(:first-child), #treeTableArea tbody tr :not(:first-child) {
+        text-align: center;
+    }
+</style>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>门店权限</legend>
+</fieldset>
+<form class="layui-form">
+    <div class="layui-form-item">
+        <div class="layui-form-item">
+            <div class="layui-col-md9">
+                <label class="layui-form-label">城市</label>
+                <div class="layui-input-inline">
+                    <select id="City" lay-filter="City" lay-search="">
+                    </select>
+                </div>
+                <label class="layui-form-label">门店</label>
+                <div class="layui-input-inline">
+                    <select id="Department" lay-filter="Department" lay-search="">
+                    </select>
+                </div>
+            </div>
+            <div class="layui-col-md3">
+                <div class="layui-input-inline">
+                    <!--<a href="javascript:;" id="Search" lay-filter="Search" class="layui-btn">查询</a>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>-->
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-col-md3">
+            <div class="setting-equal">
+                <div id="deptTree" class="ztree ztree3"></div>
+            </div>
+        </div>
+        <div class="layui-col-md9">
+            <div class="layui-col-md12">
+                <div class="layui-tab layui-tab-brief" lay-filter="TabType">
+                    <ul class="layui-tab-title">
+                        <li class="layui-this">管辖权限</li>
+                        <li>U+门店权限</li>
+                        <li>U+地理权限</li>
+                    </ul>
+                    <div class="layui-tab-content">
+                        <div class="layui-tab-item layui-show">
+                            <div class="layui-tab layui-tab-card" lay-filter="TabDivisition">
+                                <ul class="layui-tab-title">
+                                    <li class="layui-this">我能看的</li>
+                                    <li>能看我的</li>
+                                </ul>
+                                <div class="layui-tab-content tab-style">
+                                    <div class="layui-tab-item layui-show">
+                                        <div class="layui-form-item">
+                                            <label class="layui-form-label">城市</label>
+                                            <div class="layui-input-inline">
+                                                <select id="CityDivisitionCanSee" lay-filter="CityDivisitionCanSee" lay-search="">
+                                                </select>
+                                            </div>
+                                            <label class="layui-form-label">门店</label>
+                                            <div class="layui-input-inline">
+                                                <select id="DepartmentDivisitionCanSee" lay-filter="DepartmentDivisitionCanSee" lay-search="">
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="layui-form-item">
+                                            <div class="layui-col-md9">
+                                                <div class="setting-equal">
+                                                    <div id="TreeDivisitionCanSee" class="ztree ztree3"></div>
+                                                </div>
+                                            </div>
+                                            <div class="layui-col-md3">
+                                                <div class="layui-form-item">
+                                                    <a href="javascript:;" id="CheckedAllDivisitionCanSee" class="layui-btn layui-btn-sm">全部选择</a>
+                                                </div>
+                                                <div class="layui-form-item">
+                                                    <a href="javascript:;" id="UnCheckedAllDivisitionCanSee" class="layui-btn layui-btn-sm">全部取消</a>
+                                                </div>
+                                                <div class="layui-form-item">
+                                                    <a href="javascript:;" id="SaveDivisitionCanSee" class="layui-btn layui-btn-sm">保存</a>
+                                                </div>
+                                                <div class="layui-form-item">
+                                                    <a href="javascript:;" id="CopyDivisitionCanSee" class="layui-btn layui-btn-sm">复制权限到员工</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="layui-tab-item">
+                                        <div class="layui-form-item">
+                                            <label class="layui-form-label">城市</label>
+                                            <div class="layui-input-inline">
+                                                <select id="CityDivisitionBeSeen" lay-filter="CityDivisitionBeSeen" lay-search="">
+                                                </select>
+                                            </div>
+                                            <label class="layui-form-label">门店</label>
+                                            <div class="layui-input-inline">
+                                                <select id="DepartmentDivisitionBeSeen" lay-filter="DepartmentDivisitionBeSeen" lay-search="">
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="layui-form-item">
+                                            <div class="layui-col-md9">
+                                                <div class="setting-equal">
+                                                    <div id="TreeDivisitionBeSeen" class="ztree ztree3"></div>
+                                                </div>
+                                            </div>
+                                            <div class="layui-col-md3">
+                                                <div class="layui-form-item">
+                                                    <a href="javascript:;" id="CheckedAllDivisitionBeSeen" class="layui-btn layui-btn-sm">全部选择</a>
+                                                </div>
+                                                <div class="layui-form-item">
+                                                    <a href="javascript:;" id="UnCheckedAllDivisitionBeSeen" class="layui-btn layui-btn-sm">全部取消</a>
+                                                </div>
+                                                <div class="layui-form-item">
+                                                    <a href="javascript:;" id="SaveDivisitionBeSeen" class="layui-btn layui-btn-sm">保存</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-tab-item">
+                            <div class="layui-tab-item layui-show">
+                                <div class="layui-tab layui-tab-card" lay-filter="TabDept">
+                                    <ul class="layui-tab-title">
+                                        <li class="layui-this">我能看的</li>
+                                        <li>能看我的</li>
+                                    </ul>
+                                    <div class="layui-tab-content tab-style">
+                                        <div class="layui-tab-item layui-show">
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">城市</label>
+                                                <div class="layui-input-inline">
+                                                    <select id="CityDeptCanSee" lay-filter="CityDeptCanSee" lay-search="">
+                                                    </select>
+                                                </div>
+                                                <label class="layui-form-label">门店</label>
+                                                <div class="layui-input-inline">
+                                                    <select id="DepartmentDeptCanSee" lay-filter="DepartmentDeptCanSee" lay-search="">
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <input type="radio" name="TypeCode" lay-filter="TypeCode" value="all" title="全部">
+                                                <input type="radio" name="TypeCode" lay-filter="TypeCode" value="dep-fy-sel" title="查看房源">
+                                                <input type="radio" name="TypeCode" lay-filter="TypeCode" value="dep-cust-sel" title="查看客源">
+                                                <input type="radio" name="TypeCode" lay-filter="TypeCode" value="dep-public-owner" title="公盘看业主">
+                                                <input type="radio" name="TypeCode" lay-filter="TypeCode" value="dep-private-owner" title="私盘看业主">
+                                                <input type="radio" name="TypeCode" lay-filter="TypeCode" value="dep-common-owner" title="公共池房源看业主">
+                                                <input type="radio" name="TypeCode" lay-filter="TypeCode" value="dep-fy-fellow" title="房源看跟进">
+                                                <input type="radio" name="TypeCode" lay-filter="TypeCode" value="dep-cust-fellow" title="客源看跟进">
+                                            </div>
+                                            <div class="layui-form-item" id="allType">
+                                                <table id="treeTable" class="layui-table">
+                                                    <caption>
+                                                        <a href="javascript:;" class="layui-btn layui-btn-primary layui-btn-sm btn-style" onclick=" jQuery('#treeTable').treetable('expandAll'); return false; ">全部展开</a>
+                                                        <a href="javascript:;" class="layui-btn layui-btn-primary layui-btn-sm btn-style" onclick=" jQuery('#treeTable').treetable('collapseAll'); return false; ">全部折叠</a>
+                                                        <a href="javascript:;" id="SaveTreeTable" class="layui-btn layui-btn-primary layui-btn-sm btn-style">保存</a>
+                                                    </caption>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>门店</th>
+                                                            <th>查看房源</th>
+                                                            <th>查看客源</th>
+                                                            <th>公盘看业主</th>
+                                                            <th>私盘看业主</th>
+                                                            <th>公共池房源看业主</th>
+                                                            <th>房源看跟进</th>
+                                                            <th>客源看跟进</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="layui-form-item" id="oneType">
+                                                <div class="layui-col-md9">
+                                                    <div class="setting-equal">
+                                                        <div id="deptDataTree" class="ztree ztree3"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="layui-col-md3">
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="CheckedAllTypeCode" class="layui-btn layui-btn-sm">全部选择</a>
+                                                    </div>
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="UnCheckedAllTypeCode" class="layui-btn layui-btn-sm">全部取消</a>
+                                                    </div>
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="SaveTypeCode" class="layui-btn layui-btn-sm">保存</a>
+                                                    </div>
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="CopyTypeCode" class="layui-btn layui-btn-sm">复制权限到门店</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-tab-item">
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">城市</label>
+                                                <div class="layui-input-inline">
+                                                    <select id="CityDeptBeSeen" lay-filter="CityDeptBeSeen" lay-search="">
+                                                    </select>
+                                                </div>
+                                                <label class="layui-form-label">门店</label>
+                                                <div class="layui-input-inline">
+                                                    <select id="DepartmentDeptBeSeen" lay-filter="DepartmentDeptBeSeen" lay-search="">
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <input type="radio" name="TypeCodeBeSeen" lay-filter="TypeCodeBeSeen" value="dep-fy-sel" title="查看房源">
+                                                <input type="radio" name="TypeCodeBeSeen" lay-filter="TypeCodeBeSeen" value="dep-cust-sel" title="查看客源">
+                                                <input type="radio" name="TypeCodeBeSeen" lay-filter="TypeCodeBeSeen" value="dep-public-owner" title="公盘看业主">
+                                                <input type="radio" name="TypeCodeBeSeen" lay-filter="TypeCodeBeSeen" value="dep-private-owner" title="私盘看业主">
+                                                <input type="radio" name="TypeCodeBeSeen" lay-filter="TypeCodeBeSeen" value="dep-common-owner" title="公共池房源看业主">
+                                                <input type="radio" name="TypeCodeBeSeen" lay-filter="TypeCodeBeSeen" value="dep-fy-fellow" title="房源看跟进">
+                                                <input type="radio" name="TypeCodeBeSeen" lay-filter="TypeCodeBeSeen" value="dep-cust-fellow" title="客源看跟进">
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <div class="layui-col-md9">
+                                                    <div class="setting-equal">
+                                                        <div id="deptDataTreeBeSeen" class="ztree ztree3"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="layui-col-md3">
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="CheckedAllTypeCodeBeSeen" class="layui-btn layui-btn-sm">全部选择</a>
+                                                    </div>
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="UnCheckedAllTypeCodeBeSeen" class="layui-btn layui-btn-sm">全部取消</a>
+                                                    </div>
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="SaveTypeCodeBeSeen" class="layui-btn layui-btn-sm">保存</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-tab-item">
+                            <div class="layui-tab-item layui-show">
+                                <div class="layui-tab layui-tab-card" lay-filter="TabArea">
+                                    <ul class="layui-tab-title">
+                                        <li class="layui-this">我能看的</li>
+                                        <li>能看我的</li>
+                                    </ul>
+                                    <div class="layui-tab-content tab-style">
+                                        <div class="layui-tab-item layui-show">
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">城市</label>
+                                                <div class="layui-input-inline">
+                                                    <select id="CityAreaCanSee" lay-filter="CityAreaCanSee" lay-search="">
+                                                    </select>
+                                                </div>
+                                                <label class="layui-form-label">片区</label>
+                                                <div class="layui-input-inline">
+                                                    <select id="DepartmentAreaCanSee" lay-filter="DepartmentAreaCanSee" lay-search="">
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <input type="radio" name="TypeCodeArea" lay-filter="TypeCodeArea" value="all-area" title="全部">
+                                                <input type="radio" name="TypeCodeArea" lay-filter="TypeCodeArea" value="area-fy-sel" title="查看房源">
+                                                <input type="radio" name="TypeCodeArea" lay-filter="TypeCodeArea" value="area-fy-modify" title="维护房源">
+                                                <input type="radio" name="TypeCodeArea" lay-filter="TypeCodeArea" value="area-cust-sel" title="查看客源">
+                                                <input type="radio" name="TypeCodeArea" lay-filter="TypeCodeArea" value="area-fy-info" title="资料房源">
+                                            </div>
+                                            <div class="layui-form-item" id="allTypeArea">
+                                                <table id="treeTableArea" class="layui-table">
+                                                    <caption>
+                                                        <a href="javascript:;" class="layui-btn layui-btn-primary layui-btn-sm btn-style" onclick=" jQuery('#treeTableArea').treetable('expandAll'); return false; ">全部展开</a>
+                                                        <a href="javascript:;" class="layui-btn layui-btn-primary layui-btn-sm btn-style" onclick=" jQuery('#treeTableArea').treetable('collapseAll'); return false; ">全部折叠</a>
+                                                        <a href="javascript:;" id="SaveTreeTableArea" class="layui-btn layui-btn-primary layui-btn-sm btn-style">保存</a>
+                                                    </caption>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>门店</th>
+                                                            <th>查看房源</th>
+                                                            <th>维护房源</th>
+                                                            <th>查看客源</th>
+                                                            <th>资料房源</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="layui-form-item" id="oneTypeArea">
+                                                <div class="layui-col-md9">
+                                                    <div class="setting-equal">
+                                                        <div id="areaDataTree" class="ztree ztree3"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="layui-col-md3">
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="CheckedAllTypeCodeArea" class="layui-btn layui-btn-sm">全部选择</a>
+                                                    </div>
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="UnCheckedAllTypeCodeArea" class="layui-btn layui-btn-sm">全部取消</a>
+                                                    </div>
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="SaveTypeCodeArea" class="layui-btn layui-btn-sm">保存</a>
+                                                    </div>
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="CopyTypeCodeArea" class="layui-btn layui-btn-sm">复制权限到门店</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-tab-item">
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">城市</label>
+                                                <div class="layui-input-inline">
+                                                    <select id="CityAreaBeSeen" lay-filter="CityAreaBeSeen" lay-search="">
+                                                    </select>
+                                                </div>
+                                                <label class="layui-form-label">片区</label>
+                                                <div class="layui-input-inline">
+                                                    <select id="DepartmentAreaBeSeen" lay-filter="DepartmentAreaBeSeen" lay-search="">
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <input type="radio" name="TypeCodeAreaBeSeen" lay-filter="TypeCodeAreaBeSeen" value="area-fy-sel" title="查看房源">
+                                                <input type="radio" name="TypeCodeAreaBeSeen" lay-filter="TypeCodeAreaBeSeen" value="area-fy-modify" title="维护房源">
+                                                <input type="radio" name="TypeCodeAreaBeSeen" lay-filter="TypeCodeAreaBeSeen" value="area-cust-sel" title="查看客源">
+                                                <input type="radio" name="TypeCodeAreaBeSeen" lay-filter="TypeCodeAreaBeSeen" value="area-fy-info" title="资料房源">
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <div class="layui-col-md9">
+                                                    <div class="setting-equal">
+                                                        <div id="areaDataTreeBeSeen" class="ztree ztree3"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="layui-col-md3">
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="CheckedAllTypeCodeAreaBeSeen" class="layui-btn layui-btn-sm">全部选择</a>
+                                                    </div>
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="UnCheckedAllTypeCodeAreaBeSeen" class="layui-btn layui-btn-sm">全部取消</a>
+                                                    </div>
+                                                    <div class="layui-form-item">
+                                                        <a href="javascript:;" id="SaveTypeCodeAreaBeSeen" class="layui-btn layui-btn-sm">保存</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script src="../../Content/ztree/jquery.ztree.all.min.js" charset="utf-8"></script>
+<script src="../../Content/treetable/jquery.treetable.js" charset="utf-8"></script>
+<script src="../../Content/jscustomer/department/DepartmentIndex.js" charset="utf-8"></script>
+
+
+

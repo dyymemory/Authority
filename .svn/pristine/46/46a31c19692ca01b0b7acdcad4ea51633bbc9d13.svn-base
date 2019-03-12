@@ -1,0 +1,61 @@
+﻿var SystemMulti = {
+	SelectedData: window.parent.SystemForm.SelectedData,
+	user: {},
+	Init: function () {
+		SystemMulti.user = CacheHelper.GetUser();
+		layui.use(['form'], function () {
+			var form = layui.form,
+				table = layui.table;
+			form.render();
+			ControlComm.PositionBinding($('#Position'), form, SystemMulti.SelectedData.CityID, SystemMulti.SelectedData.PositionID);
+		});
+	},
+	Cancel: function () {
+		var Index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+		parent.layer.close(Index);
+	},
+	Confirm: function () {
+		var CodeJson = parent.SystemForm.codejson;
+		JSON = SystemMulti.SelectedData;
+		console.log(JSON);
+		var positionID = $('#Position').val();
+		console.log(positionID);
+		var param = {};
+		param.ModulePrivList = CodeJson.ModulePrivList;
+		param.ModDate = PublicComm.GetServeDate().Format("yyyy-MM-dd hh:mm:ss.S");
+		param.EmpCode = JSON.EmpCode;
+		param.PlatForm = 3;
+		param.PositionCode = JSON.PositionCode;
+		console.log(JSON.PositionCode);
+		if (!!SystemMulti.user) {
+			param.Modifier = SystemMulti.user.EmpCode;
+		}
+		PublicComm.Ajax("POST", "/Authority/Privilege/UpdatePrivToPosition", param, true, function (result) {
+			if (result.Code == 2000) {
+				alert("保存到职务成功");
+				SystemMulti.MultiSavePositionPrivToEmp(positionID, CodeJson);
+			}
+			else {
+				alert(result.Messege);
+			}
+		});
+	},
+	MultiSavePositionPrivToEmp: function (positionID, CodeJson) {
+		var param = {};
+		param.PositionID = positionID;
+		param.CityID = SystemMulti.SelectedData.CityID;
+		param.ModulePrivList = CodeJson.ModulePrivList;
+		param.PlatForm = 3
+		PublicComm.Ajax("POST", "/Authority/Privilege/MultiUpdatePrivToEmp", param, true, function (result) {
+			if (result.Code == 2000) {
+				alert("保存到员工成功");
+			}
+			else {
+				alert(result.Messege);
+			}
+		});
+	},	
+}
+$(function () {
+	SystemMulti.Init();
+});

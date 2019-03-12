@@ -1,0 +1,75 @@
+﻿namespace ERP.Authority.Entity.SDTM
+{
+    public class U_User : B_Base
+    {
+        public int EmpCode { get; set; }
+
+        private string empName = "";
+        /// <summary>
+        /// 用户名称
+        /// </summary>
+        public string EmpName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(empName))
+                {
+                    empName = "";
+                }
+                return empName;
+            }
+            set { empName = value; }
+        }
+
+        private string pwd = "";
+        /// <summary>
+        /// 密码
+        /// </summary>
+        public string Pwd
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(pwd))
+                {
+                    pwd = "";
+                }
+                return pwd;
+            }
+            set { pwd = value; }
+        }
+
+        private string mobile = "";
+        /// <summary>
+        /// 用户手机号
+        /// </summary>
+        public string Mobile
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(mobile))
+                {
+                    mobile = "";
+                }
+                return mobile;
+            }
+            set { mobile = value; }
+        }
+
+        private string staffImage = "";
+        /// <summary>
+        /// 头像
+        /// </summary>
+        public string StaffImage
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(staffImage))
+                {
+                    staffImage = "";
+                }
+                return staffImage;
+            }
+            set { staffImage = value; }
+        }
+    }
+}

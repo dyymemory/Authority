@@ -1,0 +1,63 @@
+﻿var SystemForm = {
+	Init: function () {
+		ControlComm.GetPrivTree($('#systree'), "/Authority/Privilege/GetPrivilegeTreeList");
+	},
+	SaveClick: function () {
+		var zTree = $.fn.zTree.getZTreeObj("systree");
+		var initpriv = "priv,priv-empauth,priv-empauth-query";
+		var menuIds = initpriv.split(',');
+		for (var i = 0; i < menuIds.length; i++) {
+			var node = zTree.getNodeByParam("ModuleCode", menuIds[i]);
+			if (node != null) {
+				zTree.checkNode(node, true);
+			}
+		};
+	},
+	SavePrivToEmp: function () {
+		var codes = "";
+		var treeObj = $.fn.zTree.getZTreeObj("systree"),
+			nodes = treeObj.getCheckedNodes(true),
+			v = "";
+		console.log(nodes);
+		for (var i = 0; i < nodes.length; i++) {
+			codes += nodes[i].ModuleCode + ",";
+		}
+		console.log(codes.substring(0, codes.length - 1));
+		var mod = PublicComm.GetServeDate();
+		var moddate = mod.Format("yyyy-MM-dd hh:mm:ss.S");
+		var codejson = { 'ModuleCode': codes.substring(0, codes.length - 1), 'ModDate': moddate };
+		PublicComm.Ajax("POST", "/Authority/Privilege/UpdateEmpPrivilege", codejson, true, function (result) {
+			if (result.Code == 2000) {
+				alert("保存成功");
+			}
+			else {
+				alert(result.Messege);
+			}
+		});
+	},
+	SavePrivToPosition: function () {
+		var codes = "";
+		var treeObj = $.fn.zTree.getZTreeObj("systree"),
+			nodes = treeObj.getCheckedNodes(true),
+			v = "";
+		console.log(nodes);
+		for (var i = 0; i < nodes.length; i++) {
+			codes += nodes[i].ModuleCode + ",";
+		}
+		console.log(codes.substring(0, codes.length - 1));
+		var mod = PublicComm.GetServeDate();
+		var moddate = mod.Format("yyyy-MM-dd hh:mm:ss.S");
+		var codejson = { 'ModulePrivList': codes.substring(0, codes.length - 1), 'ModDate': moddate };
+		PublicComm.Ajax("POST", "/Authority/Privilege/UpdatePrivToPosition", codejson, true, function (result) {
+			if (result.Code == 2000) {
+				alert("保存成功");
+			}
+			else {
+				alert(result.Messege);
+			}
+		});
+	}
+}
+$(function () {
+	SystemForm.Init();
+});

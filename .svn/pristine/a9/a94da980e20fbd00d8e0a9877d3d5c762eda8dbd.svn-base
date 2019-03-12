@@ -1,0 +1,43 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Dapper;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.General;
+
+namespace ERP.Authority.DAL
+{
+    public class B_CityDAL
+    {
+        /// <summary>
+        /// 获取所有城市列表
+        /// </summary>
+        /// <returns></returns>
+        public List<B_City> GetAllCityList(E_Employee employee)
+        {
+            StringBuilder sql = new StringBuilder(@"
+SELECT  CityID ,
+        CityName ,
+        PinYin ,
+        ProvincesID
+FROM    dbo.B_City ( NOLOCK )
+WHERE   IsDel = 0 ");
+            if (!WebConfigOperation.IsAdmin(employee.Mobile) && employee.PlatForm > 0)
+            {
+                sql.Append(@" AND EXISTS ( SELECT *
+                     FROM   dbo.Func_SplitToTable(( SELECT  CityList
+                                                    FROM    Priv_EmployeeCity pec
+                                                    WHERE   pec.IsDel = 0
+                                                            AND pec.EmpCode = @EmpCode
+                                                            AND pec.PlatForm = @PlatForm
+                                                  ), ',') t
+                     WHERE  c.CityID = t.value ) ");
+            }
+            sql.Append(" ORDER BY Sort ASC ");
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<B_City>(sql.ToString(), employee).ToList();
+            }
+        }
+    }
+}

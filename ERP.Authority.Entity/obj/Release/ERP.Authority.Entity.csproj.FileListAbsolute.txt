@@ -1,0 +1,6 @@
+D:\A权限管理\ERP.Authority.API\ERP.Authority.Entity\bin\Release\ERP.Authority.Entity.dll
+D:\A权限管理\ERP.Authority.API\ERP.Authority.Entity\bin\Release\ERP.Authority.Entity.pdb
+D:\A权限管理\ERP.Authority.API\ERP.Authority.Entity\obj\Release\ERP.Authority.Entity.csprojResolveAssemblyReference.cache
+D:\A权限管理\ERP.Authority.API\ERP.Authority.Entity\obj\Release\ERP.Authority.Entity.csproj.CoreCompileInputs.cache
+D:\A权限管理\ERP.Authority.API\ERP.Authority.Entity\obj\Release\ERP.Authority.Entity.dll
+D:\A权限管理\ERP.Authority.API\ERP.Authority.Entity\obj\Release\ERP.Authority.Entity.pdb

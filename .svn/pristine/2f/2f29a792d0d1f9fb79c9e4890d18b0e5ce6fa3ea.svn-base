@@ -1,0 +1,26 @@
+﻿var DepartmentIndex = {
+    Init: function () {
+        layui.use(['element', 'form'], function () {
+            var element = layui.element,
+                form = layui.form;
+
+            $('.site-demo-active').on('click', function () {
+                var othis = $(this), type = othis.data('type');
+                active[type] ? active[type].call(this, othis) : '';
+            });
+
+            form.render();
+            ControlComm.CityBinding($('#City'), form);
+            ControlComm.DepartmentBinding($('#Department'), form);
+            debugger;
+            ControlComm.GetDeptTreeNoCheck($('#deptTree'), '/Authority/Department/GetAllDepartmentList', '', false);
+
+            $('#Search').on('click', function () {
+            });
+        });
+    },
+}
+
+$(function () {
+    DepartmentIndex.Init();
+});

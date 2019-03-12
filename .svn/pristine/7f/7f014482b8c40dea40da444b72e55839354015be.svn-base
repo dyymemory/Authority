@@ -1,0 +1,27 @@
+﻿using ERP.Authority.DAL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.BLL
+{
+    public class DataDepartModulePriveBLL
+    {
+        public ResultModel<object> UpdateUplusEmpPrivilege(DataDepartModulePrive Priv)
+        {
+            var result = new DataDepartModulePriveDAL().UpdateUplusEmpPrivilege(Priv);
+            if (result > 0)
+            {
+                return new ResultModel<object>() { };
+            }
+            else
+            {
+                return new ResultModel<object>() { Code = 2001, Message = "更新失败" };
+            }
+        }
+    }
+}

@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>layui</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../Content/layui/css/layui.css" media="all">
+    <!-- 注意：如果你直接复制所有代码到本地，上述css路径需要改成你本地的 -->
+</head>
+<body>
+
+    <div class="layui-layout layui-layout-admin">
+        <div class="layui-header">
+            <div class="layui-logo">权限管理</div>
+            <!-- 头部区域（可配合layui已有的水平导航） -->
+            <ul class="layui-nav layui-layout-right">
+                <li class="layui-nav-item">
+                    <a href="javascript:;" id="cityName"></a>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;" id="empName"></a>
+                </li>
+                <li class="layui-nav-item"><a href="javascript:;" id="logout">退了</a></li>
+            </ul>
+        </div>
+
+        <div class="layui-side layui-bg-black">
+            <div class="layui-side-scroll">
+                <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+                <ul class="layui-nav layui-nav-tree" lay-filter="demo">
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a class="" href="javascript:;">系统设置</a>
+                        <dl class="layui-nav-child">
+                            <dd><a href="javascript:;" data-nav="system/system_index.html">系统权限</a></dd>
+                            <dd><a href="javascript:;" data-nav="test.html">demo</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a class="" href="javascript:;">权限管理</a>
+                        <dl class="layui-nav-child">
+                            <dd><a href="javascript:;" data-nav="position/position_index.html">职务管理</a></dd>
+                            <dd><a href="javascript:;" data-nav="department/department_index.html">门店权限</a></dd>
+                            <dd><a href="javascript:;" data-nav="employee/employee_index.html">员工管理</a></dd>
+                        </dl>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="layui-body">
+            <!-- 内容主体区域 -->
+            <div id="layui-body" style="padding: 15px;"></div>
+        </div>
+
+        <div class="layui-footer">
+            <!-- 底部固定区域 -->
+            <span>Copyright©2007-2019 版权所有：吉家网 鄂ICP备14003101号-4</span><span style="float: right; margin-right: 20px;">版本号：V1.0.0</span>
+        </div>
+    </div>
+
+
+    <script src="../Content/Jquery/jquery-1.11.3.min.js" charset="utf-8"></script>
+    <script src="../Content/layui/layui.js" charset="utf-8"></script>
+    <!-- 注意：如果你直接复制所有代码到本地，上述js路径需要改成你本地的 -->
+    <script src="../Content/jscustomer/PublicComm.js" charset="utf-8"></script>
+    <script src="../Content/jscustomer/ControlComm.js" charset="utf-8"></script>
+    <script src="../Content/jscustomer/Login.js" charset="utf-8"></script>
+    <script>
+        layui.use(['element', 'layer'], function () {
+            var element = layui.element, //导航的hover效果、二级菜单等功能，需要依赖element模块
+                layer = layui.layer;
+
+            //监听导航点击
+            element.on('nav(demo)', function (elem) {
+                $("#layui-body").load($(elem.context).attr("data-nav"));
+            });
+
+            $('#logout').on('click', function () {
+                layer.confirm('确认退出？',
+                    {
+                        btn: ['确定', '取消']
+                    },
+                    function (index) {
+                        Login.LoginOut();
+                    },
+                    function (index) {
+                        layer.close(index);
+                    });
+            });
+        });
+
+        $(function () {
+            var user = layui.sessionData('login').user;
+            if (!!user) {
+                $('#cityName').text("员工所在城市：" + user.CityName);
+                $('#empName').text(user.EmpName);
+            }
+        });
+    </script>
+
+</body>
+</html>

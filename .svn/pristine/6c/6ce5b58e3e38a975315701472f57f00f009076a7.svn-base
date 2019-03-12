@@ -1,0 +1,69 @@
+﻿using ERP.Authority.DAL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+using ERP.Authority.General;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.BLL
+{
+    public class Priv_EmployeeBLL
+    {
+        public ResultModel<object> MultiUpdatePrivToEmp(MultiList multiList, UserInfoForCookie user)
+        {
+            var msg = new ResultModel<object>();
+            var listInsertPrivEmployee = new List<Priv_Employee>();
+            E_Employee e_Employee = new E_Employee();
+            e_Employee.PositionID = multiList.PositionID;
+            e_Employee.CityID = multiList.CityID;
+            var e_EmployeeList = new E_EmployeeBLL().GetAllEmpByPositionID(e_Employee);
+            List<int> allempcodelist = new List<int>();// 一个部门的 DataCode
+            e_EmployeeList.ForEach(p => allempcodelist.Add(p.EmpCode));
+            var existempcode = new Priv_EmployeeDAL().GetDistinctEmpCode(multiList.CityID, multiList.PlatForm);
+            var insertList = allempcodelist.Except(existempcode).ToList();
+            List<int> updateList = allempcodelist.Intersect(existempcode).ToList();
+            listInsertPrivEmployee = listInsertPrivEmployee.Union(insertList.Select(empcode => new Priv_Employee()
+            {
+                EmpCode = empcode,
+                CityID = Convert.ToByte(multiList.CityID),
+                PlatForm = Convert.ToByte(multiList.PlatForm),
+                ModulePrivList = multiList.ModulePrivList,
+                DataPrivJson = multiList.DataPrivJson,
+            })).ToList();
+            new Priv_EmployeeDAL().MultiUpdatePrivToEmp(listInsertPrivEmployee.ToDataTable(), updateList, multiList, user);
+            return msg;
+        }
+        /// <summary>
+        /// 通过城市、平台获取员工权限
+        /// </summary>
+        /// <param name="privEmployee"></param>
+        /// <returns></returns>
+        public ResultModel<List<Priv_Employee>> GetPrivEmployeeByEmployee(Priv_Employee privEmployee)
+        {
+            var msg = new ResultModel<List<Priv_Employee>>();
+            if (privEmployee.CityID == 0)
+            {
+                msg.Code = 2001;
+                msg.Message = "城市错误";
+                return msg;
+            }
+            if (privEmployee.PlatForm == 0)
+            {
+                msg.Code = 2001;
+                msg.Message = "平台错误";
+                return msg;
+            }
+            if (privEmployee.EmpCode == 0)
+            {
+                msg.Code = 2001;
+                msg.Message = "员工Code错误";
+                return msg;
+            }
+            msg.Data = new Priv_EmployeeDAL().GetPrivEmployeeByEmployee(privEmployee);
+            return msg;
+        }
+    }
+}

@@ -1,0 +1,24 @@
+﻿using ERP.Authority.DAL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.BLL
+{
+    public class Priv_DepartmentBLL
+    {
+        /// <summary>
+        /// 获取门店权限
+        /// </summary>
+        /// <param name="privDepartment"></param>
+        /// <returns></returns>
+        public ResultModel<List<dynamic>> GetPrivDepartmentList(Priv_Department privDepartment)
+        {
+            return new ResultModel<List<dynamic>>() { Data = new Priv_DepartmentDAL().GetPrivDepartmentList(privDepartment) };
+        }
+    }
+}

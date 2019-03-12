@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../Content/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="../../Content/ztree/metroStyle/hjc.min.css" media="all">
+    <link rel="stylesheet" href="../../Content/ztree/metroStyle/metroStyle.css" media="all">
+    <link rel="stylesheet" href="../../Content/treetable/css/jquery.treetable.css" media="all">
+    <link rel="stylesheet" href="../../Content/treetable/css/jquery.treetable.theme.default.css" media="all">
+    <title></title>
+</head>
+<body>
+    
+        <div class="layui-form-item" id="allType">
+            <div class="layui-btn-container" style="padding-left:600px;padding-top:9px">
+                <button class="layui-btn layui-btn-sm"  onclick="CopyDeptToEmp.SaveEmpDeptTable()"   style="width:100px" data-type="parseTable">保存</button>
+            </div>
+            <!--<table class="layui-table"lay-data="{url:'/Authority/Employee/GetDeptEmpByDepartOnlyCode', id:'905'}" lay-filter="Deptdemo" >
+            <thead>
+                <tr>
+                    <th lay-data="{checkbox:true, fixed:'left'}" rowspan="2">DepartOnlyCode</th>
+                    <th lay-data="{field:'DeptName', width:150}" rowspan="2">门店名称</th>
+                    <th lay-data="{field:'EmpName'}" colspan="2">员工姓名</th>
+                    <th lay-data="{field:'EmpNo', width:120}" rowspan="2">员工编号</th>
+                    <th lay-data="{field:'PositionName', width:120}" rowspan="2">员工职务</th>
+                </tr>
+            </thead>
+        </table>-->
+            <!--<div class="layui-form-item">-->
+                <table class="layui-hide" id="Deptdemo" lay-filter="Deptdemo"></table>
+            <!--</div>-->
+        </div>
+        <script src="../../Content/Jquery/jquery-1.11.3.min.js" charset="utf-8"></script>
+        <script src="../../Content/layui/layui.js" charset="utf-8"></script>
+        <script src="../../Content/jscustomer/PublicComm.js"></script>
+        <script src="../../Content/jscustomer/ControlComm.js"></script>
+        <script src="../../Content/jscustomer/CacheHelper.js"></script>
+        <script src="../../Content/jscustomer/department/CopyDeptToEmp.js" charset="utf-8"></script>
+</body>
+</html>

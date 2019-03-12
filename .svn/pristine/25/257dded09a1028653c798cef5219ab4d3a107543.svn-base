@@ -1,0 +1,157 @@
+﻿using Dapper;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace ERP.Authority.DAL
+{
+    public class E_EmployeeDAL
+    {
+        /// <summary>
+        /// 根据部门获取员工信息
+        /// </summary>
+        /// <param name="deptID"></param>
+        /// <returns></returns>
+        public List<E_Employee> GetEmployeeListByDeptID(string deptID)
+        {
+            string sql = @"
+SELECT  EmpID ,
+        EmpCode ,
+        CityID ,
+        EmpNo ,
+        EmpName ,
+        DeptID
+FROM    dbo.E_Employee ( NOLOCK )
+WHERE FlagDeleted = 0 AND FlagTrashed = 0 AND ZFStatus <> 2
+AND DeptID = @DeptID;";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<E_Employee>(sql, new { DeptID = deptID }).ToList();
+            }
+        }
+
+        /// <summary>
+        /// 根据条件查询员工相关信息
+        /// </summary>
+        /// <param name="emp"></param>
+        /// <returns></returns>
+        public List<dynamic> GetEmployeeListForTalbe(E_Employee emp, PageModel pm)
+        {
+            StringBuilder sbSql = new StringBuilder(@"
+SELECT  e.EmpID ,
+        e.EmpCode ,
+        e.EmpNo ,
+        e.EmpName ,
+        e.DeptID ,
+        e.PositionID ,
+        e.CityID ,
+        e.Mobile ,
+        d.DeptName ,
+        p.PositionName ,
+        p.PositionCode ,
+        c.CityName
+FROM    dbo.E_Employee e ( NOLOCK )
+        LEFT JOIN dbo.E_Department d ( NOLOCK ) ON e.DeptID = d.DeptID
+        LEFT JOIN dbo.E_Position p ( NOLOCK ) ON e.PositionID = p.PositionID
+        LEFT JOIN dbo.B_City c ( NOLOCK ) ON e.CityID = c.CityID
+WHERE   e.FlagTrashed = 0
+        AND e.FlagDeleted = 0 
+        AND e.ZFStatus <> 2");
+
+            var dyParamter = new DynamicParameters();
+            dyParamter.Add("PageIndex", pm.PageIndex);
+            dyParamter.Add("PageSize", pm.PageSize);
+            if (emp != null)
+            {
+                if (emp.CityID > 0)
+                {
+                    sbSql.Append(" AND e.CityID = @CityID");
+                    dyParamter.Add("CityID", emp.CityID);
+                }
+                if (!string.IsNullOrEmpty(emp.PositionID))
+                {
+                    sbSql.Append(" AND e.PositionID = @PositionID ");
+                    dyParamter.Add("PositionID", emp.PositionID);
+                }
+                if (!string.IsNullOrEmpty(emp.DeptID))
+                {
+                    sbSql.Append(" AND e.DeptID = @DeptID ");
+                    dyParamter.Add("DeptID", emp.DeptID);
+                }
+                if (emp.EmpCode > 0)
+                {
+                    sbSql.Append(" AND e.EmpCode = @EmpCode ");
+                    dyParamter.Add("EmpCode", emp.EmpCode);
+                }
+                if (emp.IsAnyAuthority == 1 && emp.PlatForm == 3)
+                {
+                    sbSql.Append(" AND EXISTS ( SELECT 1 FROM dbo.Priv_Employee pe WHERE pe.EmpCode = e.EmpCode AND pe.IsDel = 0 AND pe.PlatForm = 3 )");
+                }
+                else if (emp.IsAnyAuthority == 1)
+                {
+                    sbSql.Append(" AND EXISTS ( SELECT 1 FROM dbo.Priv_Employee pe WHERE pe.EmpCode = e.EmpCode AND pe.IsDel = 0 AND pe.PlatForm <> 3 )");
+                }
+                else if (emp.IsAnyAuthority == 2 && emp.PlatForm == 3)
+                {
+                    sbSql.Append(" AND NOT EXISTS ( SELECT 1 FROM dbo.Priv_Employee pe WHERE pe.EmpCode = e.EmpCode AND pe.IsDel = 0 AND pe.PlatForm = 3 )");
+                }
+                else if (emp.IsAnyAuthority == 2)
+                {
+                    sbSql.Append(" AND NOT EXISTS ( SELECT 1 FROM dbo.Priv_Employee pe WHERE pe.EmpCode = e.EmpCode AND pe.IsDel = 0 AND pe.PlatForm <> 3 )");
+                }
+            }
+
+            string querySql = string.Format("WITH query AS ({0}) ", sbSql);
+            string countSql = querySql + " SELECT COUNT(*) FROM query";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                pm.TotalCount = conn.Query<int>(countSql, dyParamter).FirstOrDefault();
+                if (pm.TotalCount > 0)
+                {
+                    string pageSql = querySql + " SELECT * FROM ( SELECT ROW_NUMBER() OVER(ORDER BY EmpNo ASC) AS RowNum, * FROM query ) t WHERE t.RowNum > (@PageIndex -1) * @PageSize AND t.RowNum <= @PageIndex * @PageSize";
+                    return conn.Query<dynamic>(pageSql, dyParamter).ToList();
+                }
+                return new List<dynamic>();
+            }
+        }
+        public List<E_Employee> GetAllEmpByPositionID(E_Employee e_Employee)
+        {
+            string sql = @"SELECT  e.*
+        FROM    dbo.E_Employee AS e
+                INNER JOIN dbo.E_Position AS p ON e.PositionID = p.PositionID
+        WHERE   e.FlagTrashed = 0
+                AND e.FlagDeleted = 0
+                AND e.ZFStatus <> 2
+                AND e.PositionID = @PositionID
+                AND e.CityID=@CityID
+        ORDER BY e.ZFStatus DESC";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<E_Employee>(sql, e_Employee).ToList();
+            }
+        }
+
+
+        /// <summary>
+        /// 根据DepartOnlyCode获取门店下的员工及其职位
+        /// </summary>
+        /// <param name="e_Department"></param>
+        /// <returns></returns>
+        public List<E_Employee> GetDeptEmpByDepartOnlyCode(E_Employee e_Employee)
+        {
+            string sql = @"SELECT  e.EmpID, e.EmpName,e.EmpNo,d.DeptName,p.PositionName,d.DepartOnlyCode  FROM dbo.E_Employee e ( NOLOCK )
+            LEFT JOIN dbo.E_Department d ( NOLOCK )
+            ON d.DeptID = e.DeptID LEFT JOIN  dbo.E_Position p ( NOLOCK )
+            ON p.PositionID = e.PositionID WHERE e.FlagTrashed=0 AND
+            d.FlagDeleted=0 AND   e.AwayStatus<>1 AND d.DepartOnlyCode=@DepartOnlyCode";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<E_Employee>(sql, e_Employee).ToList();
+            }
+
+
+        }
+    }
+}

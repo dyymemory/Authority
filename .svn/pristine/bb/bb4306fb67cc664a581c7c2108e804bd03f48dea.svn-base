@@ -1,0 +1,30 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using ERP.Authority.Cache;
+using ERP.Authority.DAL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+
+namespace ERP.Authority.BLL
+{
+    public class B_CityBLL
+    {
+        /// <summary>
+        /// 获取所有城市列表
+        /// </summary>
+        /// <returns></returns>
+        public ResultModel<List<B_City>> GetAllCityList(E_Employee employee)
+        {
+            var msg = new ResultModel<List<B_City>>();
+            var authlist = new B_CityDAL().GetCityListByAuthority(employee).Select(item => item.CityID).ToList();// 权限内的城市列表
+            var list = new B_CityCache().GetAllCityListCache(employee); // 全部城市列表            
+            msg.Data = GetCombineCityList(list, authlist);
+            return msg;
+        }
+        // 获取权限内城市列表
+        public List<B_City> GetCombineCityList(List<B_City> AllList, List<int> AuthList)
+        {
+            return AllList.Where(t => AuthList.Contains(t.CityID)).ToList();
+        }
+    }
+}

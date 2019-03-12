@@ -1,0 +1,93 @@
+﻿using System.Collections.Generic;
+using System.Web.Http;
+using ERP.Authority.BLL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+using Newtonsoft.Json.Linq;
+
+namespace ERP.Authority.API.Controllers.V1
+{
+    public class PrivilegeController : BaseApiController
+    {
+        Priv_ModuleBLL privbll = new Priv_ModuleBLL();
+        [HttpPost]
+        public ResultModel<List<E_MarketMenu>> GetTreeList()
+        {
+            return new Priv_ModuleBLL().GetTreeList();
+        }
+        /// <summary>
+        /// 获取模块权限树
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<List<Priv_Module>> GetPrivilegeTreeList()
+        {
+            return new Priv_ModuleBLL().GetPrivilegeTreeList();
+        }
+        /// <summary>
+        /// 保存权限到员工
+        /// </summary>
+        /// <param name="modulePriv"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<object> UpdateEmpPrivilege([FromBody] Priv_Module modulePriv)
+        {
+            return privbll.UpdateEmpPrivilege(modulePriv.ModuleCode, modulePriv.ModDate);
+        }
+        [HttpPost]
+        public ResultModel<List<Priv_Module>> GetAllModulePrivilegeList()
+        {
+            return privbll.GetAllModulePrivilegeList();
+        }
+        /// <summary>
+        /// 保存权限到职位
+        /// </summary>
+        /// <param name="p_Position"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<object> UpdatePrivToPosition([FromBody] Priv_Position p_Position)
+        {
+            return new Priv_PositionBLL().UpdatePrivToPosition(p_Position.ModulePrivList, p_Position.ModDate);
+        }
+        /// <summary>
+        /// 根据empcode获取员工模块权限
+        /// </summary>
+        /// <param name="e_Employee"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<List<E_EmployeeView>> GetPrivByEmpCode([FromBody] E_Employee e_Employee)
+        {
+            return privbll.GetPrivByEmpCode(e_Employee.EmpCode);
+        }
+        /// <summary>
+        /// 保存员工城市权限
+        /// </summary>
+        /// <param name="privEmployeeCity"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<object> SavePrivEmployeeCity([FromBody] Priv_EmployeeCity privEmployeeCity)
+        {
+            return new Priv_EmployeeCityBLL().SavePrivEmployeeCity(privEmployeeCity);
+        }
+        /// <summary>
+        /// 获取员工城市权限
+        /// </summary>
+        /// <param name="privEmployeeCity"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<Priv_EmployeeCity> GetPrivEmployeeCity([FromBody] Priv_EmployeeCity privEmployeeCity)
+        {
+            return new Priv_EmployeeCityBLL().GetPrivEmployeeCity(privEmployeeCity);
+        }
+        /// <summary>
+        /// 保存权限到员工
+        /// </summary>
+        /// <param name="priv_Employee"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public ResultModel<object> MultiUpdatePrivToEmp([FromBody] Priv_Employee priv_Employee)
+        {
+            return new Priv_EmployeeBLL().MultiUpdatePrivToEmp(priv_Employee.EmpCode, priv_Employee.ModulePrivList);
+        }
+    }
+}

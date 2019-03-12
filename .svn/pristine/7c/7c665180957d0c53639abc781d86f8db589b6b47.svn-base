@@ -1,0 +1,62 @@
+﻿var EmployeeMulti = {
+	Employee: window.parent.EmployeeEdit.Employee,
+	PlatFormSelect: window.parent.EmployeeEdit.PlatFormSelect,
+	Init: function () {
+		user = CacheHelper.GetUser();
+		var entity = parent.Parent_json;
+		layui.use(['form'], function () {
+			var form = layui.form,
+				table = layui.table;
+			form.render();
+			ControlComm.PositionBinding($('#Position'), form, EmployeeMulti.Employee.CityID, EmployeeMulti.Employee.PositionID);
+		});
+	},
+	Cancel: function () {
+		var Index = parent.index;
+		console.log(Index);
+		parent.layer.close(Index);
+	},
+	Confirm: function () {
+		var CodeJson = parent.EmployeeEdit.PositionPrivParam;
+		var JSON = EmployeeMulti.Employee;
+		var positionID = $('#Position').val();
+		var param = {};
+		param.ModulePrivList = CodeJson.ModulePrivList;
+		param.DataPrivJson = CodeJson.DataPrivJson;
+		param.ModDate = PublicComm.GetServeDate().Format("yyyy-MM-dd hh:mm:ss.S");
+		param.EmpCode = JSON.EmpCode;
+		param.PlatForm = EmployeeMulti.PlatFormSelect;
+		param.PositionCode = JSON.PositionCode;
+		if (!!user) {
+			param.Modifier = user.EmpCode;
+		}
+		PublicComm.Ajax("POST", "/Authority/Privilege/UpdateUplusPositionPrivilege", param, true, function (result) {
+			if (result.Code == 2000) {
+				alert("保存到职务成功");
+				EmployeeMulti.MultiSavePositionPrivToEmp(positionID, CodeJson);
+			}
+			else {
+				alert(result.Messege);
+			}
+		});
+	},
+	MultiSavePositionPrivToEmp: function (positionID, CodeJson) {
+		var param = {};
+		param.PositionID = positionID;
+		param.CityID = EmployeeMulti.Employee.CityID;
+		param.ModulePrivList = CodeJson.ModulePrivList;
+		param.DataPrivJson = CodeJson.DataPrivJson;
+		param.PlatForm = CodeJson.PlatForm;
+		PublicComm.Ajax("POST", "/Authority/Privilege/MultiUpdatePrivToEmp", param, true, function (result) {
+			if (result.Code == 2000) {
+				alert("保存到员工成功");
+			}
+			else {
+				alert(result.Messege);
+			}
+		});	
+	},	
+}
+$(function () {
+	EmployeeMulti.Init();
+});

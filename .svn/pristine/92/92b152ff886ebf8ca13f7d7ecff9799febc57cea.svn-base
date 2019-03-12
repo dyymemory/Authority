@@ -1,0 +1,120 @@
+﻿<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+	<legend>系统设置-系统权限</legend>
+</fieldset>
+<form class="layui-form">
+	<div class="layui-form-item">
+		<div class="layui-col-md9">
+			<label class="layui-form-label">城市</label>
+			<div class="layui-input-inline">
+				<select id="City" lay-search=""></select>
+			</div>
+			<label class="layui-form-label">门店</label>
+			<div class="layui-input-inline">
+				<select id="Department" lay-filter="Department" lay-search=""></select>
+			</div>
+			<div class="layui-input-inline">
+				<select id="Employee" lay-search=""></select>
+			</div>
+		</div>
+		<div class="layui-col-md3">
+			<div class="layui-input-inline">
+				<a href="javascript:;" id="Search" lay-filter="Search" class="layui-btn">查询</a>
+				<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+			</div>
+		</div>
+	</div>
+	<div class="layui-form-item">
+		<label class="layui-form-label">职务</label>
+		<div class="layui-input-inline">
+			<select id="Position" lay-search=""></select>
+		</div>
+		<label class="layui-form-label">是否有权限</label>
+		<div class="layui-input-inline">
+			<select>
+				<option value="">全部</option>
+				<option value="1">是</option>
+				<option value="2">否</option>
+			</select>
+		</div>
+	</div>
+	<div class="layui-form-item">
+		<table class="layui-hide" id="gridTalbe" lay-filter="editTableData"></table>
+	</div>
+</form>
+<script src="../../Content/jscustomer/PublicComm.js" charset="utf-8"></script>
+<script src="../../Content/jscustomer/ControlComm.js" charset="utf-8"></script>
+<script>
+	layui.use(['form', 'table'], function () {
+		var form = layui.form,
+			table = layui.table;
+
+		form.render();
+		ControlComm.CityBinding($('#City'), form);
+		ControlComm.DepartmentBinding($('#Department'), form);
+		form.on('select(Department)', function (data) {
+			ControlComm.EmployeeBinding($('#Employee'), form, { 'DeptID': $(data.elem).find("option:selected").val() });
+		});
+		ControlComm.PositionBinding($('#Position'), form);
+
+		$('#Search').on('click', function () {
+			var param = {};
+			var CityID = $('#City').val();
+			if (!!CityID && CityID != "") {
+				param.CityID = $('#City').val();
+			}
+			var DeptID = $('#Department').val();
+			if (!!DeptID && DeptID != "") {
+				param.DeptID = $('#Department').val();
+			}
+			var EmpID = $('#Employee').val();
+			if (!!EmpID && EmpID != "") {
+				param.EmpID = $('#Employee').val();
+			}
+			var PositionID = $('#Position').val();
+			if (!!PositionID && PositionID != "") {
+				param.PositionID = $('#Position').val();
+			}
+			console.log(param);
+			PublicComm.Ajax("POST", "/Authority/Employee/GetEmployeeListForTalbe", param, true, function (result) {
+				table.render({
+					elem: '#gridTalbe',
+					cols: [
+						[//标题栏
+							{ type: 'numbers', fixed: 'left' },
+							{ field: 'CityName', title: '城市', align: 'center' },
+							{ field: 'EmpNo', title: '编号', sort: true, align: 'center' },
+							{ field: 'DeptName', title: '门店', align: 'center' },
+							{ field: 'EmpName', title: '员工姓名', align: 'center' },
+							{ field: 'PositionName', title: '职务名称', align: 'center' },
+							{ field: 'Mobile', title: '手机', align: 'center' },
+							{ fixed: 'right', title: '操作', toolbar: '#barOperation', align: 'center' }
+						]
+					],
+					data: result.Data,
+					page: true, //是否显示分页
+				});
+			});
+
+		});
+		//监听行工具事件
+		table.on('tool(editTableData)', function (obj) {
+
+			var data = obj.data;//当前选中数据
+			var index = $(".layui-table-hover").attr("data-index");//当前选中数据的numbers值
+			var table = layui.table;//整个列表的值
+			if (obj.event === 'editemployee') {
+				layer.open({
+					type: 2,
+					title: '',
+					area: ['53%', '80%'], //宽高
+					content: 'system/system_form.html',
+					scrollbar: true,//禁用滚动条
+					btnAlign: 'd'
+				});
+			}
+		});
+	});
+</script>
+<script type="text/html" id="barOperation">
+	<a class="layui-btn layui-btn-xs" lay-event="editemployee">权限设置</a>
+</script>

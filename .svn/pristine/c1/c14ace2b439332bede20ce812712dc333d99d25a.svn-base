@@ -1,0 +1,390 @@
+﻿var EmployeeEdit = {
+	PlatFormSelect: 1,
+	CityID: 1,
+	PositionPrivParam: {},
+    Employee: window.parent.EmployeeIndex.SelectedData,
+    Init: function () {
+        layui.use(['element', 'form'], function () {
+            var element = layui.element,
+                form = layui.form;
+            form.render();
+            $('.site-demo-active').on('click', function () {
+                var othis = $(this), type = othis.data('type');
+                active[type] ? active[type].call(this, othis) : '';
+			});
+			ControlComm.CityBinding($('#City'), form, EmployeeEdit.Employee.CityID);
+			ControlComm.DepartmentBinding($('#Department'), form, EmployeeEdit.Employee.CityID);
+			//获取部门权限树			
+			var param = {};
+			param.PlatForm = 1;
+			param.EmpCode = EmployeeEdit.Employee.EmpCode;
+			param.CityID = EmployeeEdit.CityID;
+			param.PlatForm = EmployeeEdit.PlatFormSelect;
+			form.on('select(City)', function () {
+			    CityID = $("#City").find("option:selected").attr("value");
+				if (!!CityID) {
+					ControlComm.DepartmentBinding($('#Department'), form, CityID);
+					EmployeeEdit.InitDepartPrivTree(param, form);
+				}
+			})			
+            ControlComm.DataPermissionsBinding($('#DataPermissions'), form);
+			EmployeeEdit.LoadPrivModule(form);
+			
+			// 平台选择事件
+			form.on('radio(platform)', function () {
+				param.PlatForm = $("input:radio[name='platform']:checked").val();
+				PlatFormSelect = param.PlatForm;
+				EmployeeEdit.InitDepartPrivTree(param, form);
+				EmployeeEdit.LoadPrivModule(form);
+			});			
+			EmployeeEdit.InitDepartPrivTree(param, form);
+		});
+		$('#InitPositioPriv').on('click', function () {			
+			EmployeeEdit.InitPositioPriv();
+		});
+		$('#SavePrivToEmp').on('click', function () {
+			EmployeeEdit.SavePrivToEmp();
+		});
+		$('#SavePrivToPosition').on('click', function () {
+			EmployeeEdit.SavePrivToPosition();
+		});
+	},
+	//初始化树节点  重新绑定部门树
+	InitDepartPrivTree: function (param, form) {
+		//获取当前员工的部门权限
+		PublicComm.Ajax("POST", "/Authority/Privilege/GetDepartPrivByEmployee", param, true, function (result) {
+			var data = result.Data;
+			checkednodes = [];
+			AllSelectNodes = [];
+			for (var i = 0; i < data.length; i++) {
+				checkednodes.push(data[i].DepartOnlyCode);
+			}
+			//初始化部门
+			var CityID = $("#City").find("option:selected").attr("value");
+			ControlComm.GetDeptTree($('#DepartmentPermissions'),CityID, checkednodes);
+			//监听部门选择 重新绑定树
+			form.on('select(Department)', function (result) {
+				PublicComm.Ajax("POST", '/Authority/Department/GetDepartmentListByCity', param, true, function (result) {
+					var treeObj = $.fn.zTree.getZTreeObj("DepartmentPermissions");
+					var nodes = treeObj.getCheckedNodes(true);
+					if (!!nodes) {
+						for (i = 0; i < nodes.length; i++) {
+							AllSelectNodes.push(nodes[i].DepartOnlyCode);
+						}
+					}
+					console.log(AllSelectNodes);
+					var deptno = $("#Department").find("option:selected").attr("DeptNo");
+					var parentdeptno = $("#Department").find("option:selected").attr("ParentDeptNo");
+					if (!!deptno) {
+						var listSorted = [];
+						EmployeeEdit.GetChildNode(deptno, result.Data, listSorted);
+						EmployeeEdit.GetParentNode(parentdeptno, result.Data, listSorted);
+						EmployeeEdit.FreshDepartmentTree($('#DepartmentPermissions'), listSorted, AllSelectNodes);
+						var treeObj = $.fn.zTree.getZTreeObj("DepartmentPermissions");
+						var node = treeObj.getNodes();
+						var nodes = treeObj.transformToArray(node);
+						for (var i = 0; i < nodes.length; i++) {
+							for (var j = 0; j < AllSelectNodes.length; j++) {
+								if (nodes[i].DepartOnlyCode == AllSelectNodes[j]) {
+									AllSelectNodes.splice(j, 1);
+								}
+							}
+						}						
+					}
+					else {
+						EmployeeEdit.FreshDepartmentTree($('#DepartmentPermissions'), result.Data, AllSelectNodes);
+					}
+				});
+			});
+		});	
+	},
+	GetCheckedNodes: function () {
+
+	},
+    SaveData: function () {
+        var user = CacheHelper.GetUser();
+        var param = {};
+    },
+    LoadPrivModule: function (form) {
+        $('#DataPermissions input:radio').prop('checked', false);
+        var param = {};
+        param.EmpCode = EmployeeEdit.Employee.EmpCode;
+        param.PlatForm = $('input:radio[name=platform]').val();
+        PublicComm.Ajax("POST", "/Authority/Privilege/GetPrivModuleByEmployee", param, true, function (result) {
+            var modulePrivList = '';
+            if (!!result.Data) {
+				layui.each(ControlComm.DataPermissions, function () {
+					if (!!result.Data.DataPrivJson) {
+						var value = result.Data.DataPrivJson[this.name];
+						value = !!value ? value : 0;
+					}
+					else { value = 0;}
+                    $('#DataPermissions input:radio[name=' + this.name + '][value=' + value + ']').prop('checked', true);
+                });
+                modulePrivList = result.Data.ModulePrivList;
+            } else {
+                layui.each(ControlComm.DataPermissions, function () {
+                    $('#DataPermissions input:radio[name=' + this.name + '][value=0]').prop('checked', true);
+                });
+                
+            }
+			form.render('radio');
+			var param = {};
+			param.PlatForm = $("input:radio[name='platform']:checked").val();
+            ControlComm.GetPrivTree($('#Modular'), '/Authority/Privilege/GetAllModulePrivilegeList',param, modulePrivList);
+        });
+	},
+
+
+	//刷新部门树
+	// eleme 树id
+	// listSorted 节点集合
+	FreshDepartmentTree: function (eleme, data, checkednodes) {
+		var zTree;
+		var setting = {
+			view: {
+				selectedMulti: true
+			},
+			check: {
+				enable: true,
+				chkStyle: "checkbox",
+				chkboxType: { "Y": "s", "N": "s" }
+			},
+			data: {
+				simpleData: {
+					enable: true,
+					idKey: "DeptNo",
+					pIdKey: "ParentDeptNo",
+					rootPId: 0
+				}
+				,
+				key: {
+					checked: "checked",
+					name: "DeptName",
+					id: "DepartOnlyCode"
+				}
+			},
+			edit: {
+				enable: false
+			}
+		};
+		zTree = $.fn.zTree.init(eleme, setting, data);
+		if (!!checkednodes) {
+			for (var i = 0; i < checkednodes.length; i++) {
+				var node = zTree.getNodeByParam("DepartOnlyCode", checkednodes[i]);
+				if (node != null) {
+					zTree.checkNode(node, true);
+				}
+			};
+		}
+		zTree.expandAll(true);
+	},
+	//获取所有父节点
+	// deptno 当前节点的parentno
+	// deptlist 树的所有节点
+	// listSorted 子节点集合
+	GetParentNode: function (deptno, deptlist, listSorted) {
+		if (EmployeeEdit.IsContain(deptno, listSorted)) {
+			return;
+		}
+		for (var i = 0; i < deptlist.length; i++) {
+			if (deptno == deptlist[i].DeptNo) {
+				listSorted.push(deptlist[i]);
+				EmployeeEdit.GetParentNode(deptlist[i].ParentDeptNo, deptlist, listSorted);
+			}
+		}
+	},
+	//获取所有子节点
+	// deptno 当前节点deptno
+	// deptlist 树的所有节点
+	// listSorted 节点集合
+	GetChildNode: function (deptno, deptlist, listSorted) {
+		//if (EmployeeEdit.IsContain(deptno, listSorted)) {
+		//	return;
+		//}
+		for (var i = 0; i < deptlist.length; i++) {
+			if (deptno == deptlist[i].DeptNo) {
+				if (listSorted.indexOf(deptlist[i]) <= 0) {
+					listSorted.push(deptlist[i]);
+				}
+			}
+			if (deptno == deptlist[i].ParentDeptNo) {
+				listSorted.push(deptlist[i]);
+				EmployeeEdit.GetChildNode(deptlist[i].DeptNo, deptlist, listSorted);
+			}
+		}
+	},
+	IsContain: function (deptno, listSorted) {
+		for (var i = 0; i < listSorted.length; i++) {
+			if (deptno == listSorted[i].DeptNo) {
+				return true;
+			}
+		}
+		return false;
+	},
+	// 职务授权
+	InitPositioPriv: function () {
+		var param = {};
+		param.PlatForm = $('input:radio[name=platform]').val();
+		param.PositionCode = EmployeeEdit.Employee.PositionCode;
+		PublicComm.Ajax("POST", "/Authority/Privilege/GetPrivModuleByPosition", param, true, function (result) {
+			var modulePrivList = '';
+			if (!!result.Data) {
+				layui.each(ControlComm.DataPermissions, function () {
+					var value = JSON.parse(result.Data.DataPrivJson)[this.name];
+					value = !!value ? value : 0;
+					$('#DataPermissions input:radio[name=' + this.name + '][value=' + value + ']').prop('checked', true);
+				});
+				modulePrivList = result.Data.ModulePrivList;
+			}
+			else {
+				layui.each(ControlComm.DataPermissions, function () {
+					$('#DataPermissions input:radio[name=' + this.name + '][value=0]').prop('checked', true);
+				});
+			}
+			var element = layui.element;
+			form = layui.form;
+			form.render('radio');
+			var param = {};
+			param.PlatForm = $("input:radio[name='platform']:checked").val();
+			ControlComm.GetPrivTree($('#Modular'), '/Authority/Privilege/GetAllModulePrivilegeList', param, modulePrivList);
+		});
+	},
+	// 保存权限到员工
+	SavePrivToEmp: function () {
+		var DataPrivJson = EmployeeEdit.BuildDataPriv();
+		var Json = JSON.stringify(DataPrivJson); //数据权限
+		var codes = "";
+		var treeObj = $.fn.zTree.getZTreeObj("Modular"),
+			nodes = treeObj.getCheckedNodes(true),//选中的节点
+			v = "";
+		console.log(nodes);
+		if (!!nodes) {
+			for (var i = 0; i < nodes.length; i++) {
+				codes += nodes[i].ModuleCode + ",";
+			}
+		}
+		var DeptreeObj = $.fn.zTree.getZTreeObj("DepartmentPermissions"),
+			depnodes = DeptreeObj.getCheckedNodes(true);
+		console.log(depnodes);
+		console.log(AllSelectNodes);
+		var DepList = [];
+		for (var i = 0; i < depnodes.length; i++) {
+			DepList.push(depnodes[i].DepartOnlyCode);
+		}
+		var mod = PublicComm.GetServeDate();
+		var moddate = mod.Format("yyyy-MM-dd hh:mm:ss.S");
+		var param = {};
+		param.DataPrivJson = Json;//数据权限
+		param.ModulePrivList = codes.substring(0, codes.length - 1);//模块权限
+		param.DepartmentPriv = DepList;
+		param.ModDate = moddate;
+		param.CreateDate = moddate;
+		param.CityID = EmployeeEdit.Employee.CityID;
+		param.EmpCode = EmployeeEdit.Employee.EmpCode;
+		param.PlatForm = EmployeeEdit.PlatFormSelect;
+		console.log(this.PlatFormSelect);
+		debugger;
+		var user = layui.sessionData('login').user;
+		if (!!user) {
+			param.Modifier = user.EmpCode;
+			param.Creator = user.EmpCode;
+		}
+		PublicComm.Ajax("POST", "/Authority/Privilege/UpdateUplusEmpPrivilege", param, true, function (result) {
+			if (result.Code == 2000) {
+				alert("保存成功");
+			}
+			else {
+				alert(result.Messege);
+			}
+		});
+	},
+	//保存权限到职位
+	SavePrivToPosition: function () {
+		var DataPrivJson = EmployeeEdit.BuildDataPriv();
+		var Json = JSON.stringify(DataPrivJson); //数据权限
+		var codes = "";
+		var treeObj = $.fn.zTree.getZTreeObj("Modular"),
+			nodes = treeObj.getCheckedNodes(true),//选中的节点
+			v = "";
+		if (!!nodes) {
+			for (var i = 0; i < nodes.length; i++) {
+				codes += nodes[i].ModuleCode + ",";
+			}
+		}
+		var mod = PublicComm.GetServeDate();
+		var moddate = mod.Format("yyyy-MM-dd hh:mm:ss.S");
+		var param = {};
+		param.DataPrivJson = Json;//数据权限
+		param.ModulePrivList = codes.substring(0, codes.length - 1);//模块权限
+		param.ModDate = moddate;
+		param.CreateDate = moddate;
+		param.PositionCode = EmployeeEdit.Employee.PositionCode;
+		param.PlatForm = EmployeeEdit.PlatFormSelect;
+		var user = layui.sessionData('login').user;
+		if (!!user) {
+			param.Modifier = user.EmpCode;
+			param.Creator = user.EmpCode;
+		}
+		EmployeeEdit.PositionPrivParam = param;
+		layui.use("layer", function () {
+			var layer = layui.layer;
+			index = layer.open({
+				type: 2,
+				title: '保存权限到职位',
+				area: ['500px', '300px'], //宽高
+				content: 'employee_multi.html',
+				scrollbar: false,//禁用滚动条
+				btnAlign: 'd'
+			})
+		});		
+	},	
+	BuildDataPriv: function () {
+		var DataPrivJson = {};
+		var value1 = $("input[name='multy-divisitionSel']:checked").val();
+		DataPrivJson["multy-divisitionSel"] = value1;
+		var value1 = $("input[name='multy-publicSel']:checked").val();
+		DataPrivJson["multy-publicSel"] = value1;
+		var value1 = $("input[name='multy-privateSel']:checked").val();
+		DataPrivJson["multy-privateSel"] = value1;
+		var value1 = $("input[name='multy-specialSel']:checked").val();
+		DataPrivJson["multy-specialSel"] = value1;
+		var value1 = $("input[name='multy-finalSel']:checked").val();
+		DataPrivJson["multy-finalSel"] = value1;
+		var value1 = $("input[name='multy-publicSelDetail']:checked").val();
+		DataPrivJson["multy-publicSelDetail"] = value1;
+		var value1 = $("input[name='multy-privateSelDetail']:checked").val();
+		DataPrivJson["multy-privateSelDetail"] = value1;
+		var value1 = $("input[name='multy-specialSelDetail']:checked").val();
+		DataPrivJson["multy-specialSelDetail"] = value1;
+		var value1 = $("input[name='multy-finalSelDetail']:checked").val();
+		DataPrivJson["multy-finalSelDetail"] = value1;
+		var value1 = $("input[name='multy-publicModify']:checked").val();
+		DataPrivJson["multy-publicModify"] = value1;
+		var value1 = $("input[name='multy-privateModify']:checked").val();
+		DataPrivJson["multy-privateModify"] = value1;
+		var value1 = $("input[name='multy-specialModify']:checked").val();
+		DataPrivJson["multy-specialModify"] = value1;
+		var value1 = $("input[name='multy-finalModify']:checked").val();
+		DataPrivJson["multy-finalModify"] = value1;
+		var value1 = $("input[name='multy-publicCusSel']:checked").val();
+		DataPrivJson["multy-publicCusSel"] = value1;
+		var value1 = $("input[name='multy-privateCusSel']:checked").val();
+		DataPrivJson["multy-privateCusSel"] = value1;
+		return DataPrivJson;
+	},
+	GetUniq: function (array) {
+		var temp = [];
+		for (var i = 0; i < array.length; i++) {
+			if (temp.indexOf(array[i]) == -1) {
+				temp.push(array[i]);
+			}
+		}
+		console.log(temp);
+		return temp;
+	},
+}
+
+$(function () {
+    EmployeeEdit.Init();
+});

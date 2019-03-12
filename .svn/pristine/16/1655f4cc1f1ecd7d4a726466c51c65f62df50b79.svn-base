@@ -1,0 +1,34 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using Dapper;
+using ERP.Authority.Entity.SDTM;
+using JiJia.Market.Entity.SDTM;
+
+namespace ERP.Authority.DAL
+{
+    public class E_EmployeeDAL
+    {
+        /// <summary>
+        /// 根据部门获取员工信息
+        /// </summary>
+        /// <param name="deptID"></param>
+        /// <returns></returns>
+        public List<E_Employee> GetEmployeeListByDeptID(string deptID)
+        {
+            string sql = @"
+SELECT  EmpID ,
+        EmpCode ,
+        CityID ,
+        EmpNo ,
+        EmpName ,
+        DeptID
+FROM    dbo.E_Employee
+WHERE FlagDeleted = 0 AND FlagTrashed = 0
+AND DeptID = @DeptID;";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<E_Employee>(sql, new { DeptID = deptID }).ToList();
+            }
+        } 
+    }
+}

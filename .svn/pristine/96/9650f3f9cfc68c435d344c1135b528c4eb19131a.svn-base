@@ -1,0 +1,18 @@
+﻿using ERP.Authority.API.Filter;
+using ERP.Authority.API.Filter.API;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Web.Http;
+
+namespace ERP.Authority.API.Controllers
+{
+    [ApiLog]
+
+    public class BaseApiController : ApiController
+    {
+       
+    }
+}

@@ -1,0 +1,101 @@
+﻿var SystemForm = {
+	Init: function () {
+		employee = layui.sessionData('sessionStorage').employee;
+		
+		if (location.hash == '#set') {
+			console.log(location.hash);
+			var str = "";
+			str += '<div class="layui-row layui-input-inline">';
+			str += '<a href="javascript:;" onclick="SystemForm.SaveClick()" class="layui-btn layui-btn-sm" style="margin-left:10px">职务授权</a>';
+			str += '<a href="javascript:;" onclick="SystemForm.SavePrivToEmp()" class="layui-btn layui-btn-sm">保存权限到员工</a>';
+			str += '<a href="javascript:;" onclick="SystemForm.SavePrivToPosition()" class="layui-btn layui-btn-sm">保存权限到职务</a>';
+			str += '</div >';
+			console.log(str);
+			document.getElementById("three").innerHTML = str;
+		}
+		if (location.hash == '#view') {
+			console.log(location.hash);
+			var str = "";
+			document.getElementById("three").innerHTML = str;
+		}
+		Parent_json = window.parent.SystemIndex.json;
+		SystemForm.GetPrivByEmpCode(Parent_json.EmpCode);		
+	},	
+	SaveClick: function () {
+		var zTree = $.fn.zTree.getZTreeObj("systree");
+		var initpriv = "priv,priv-empauth,priv-empauth-query";
+		var menuIds = initpriv.split(',');
+		for (var i = 0; i < menuIds.length; i++) {
+			var node = zTree.getNodeByParam("ModuleCode", menuIds[i]);
+			if (node != null) {
+				zTree.checkNode(node, true);
+			}
+		};
+	},
+	SavePrivToEmp: function () {
+		var codes = "";
+		var treeObj = $.fn.zTree.getZTreeObj("systree"),
+			nodes = treeObj.getCheckedNodes(true),
+			v = "";
+		console.log(nodes);
+		if (!!nodes) {
+			for (var i = 0; i < nodes.length; i++) {
+				codes += nodes[i].ModuleCode + ",";
+			}
+			console.log(codes.substring(0, codes.length - 1));
+			var mod = PublicComm.GetServeDate();
+			var moddate = mod.Format("yyyy-MM-dd hh:mm:ss.S");
+			var codejson = { 'ModuleCode': codes.substring(0, codes.length - 1), 'ModDate': moddate };			
+			var param = {};
+			param.ModulePrivList = codes.substring(0, codes.length - 1);
+			param.ModDate = moddate;
+			param.EmpCode = Parent_json.EmpCode;
+			param.PlatForm = Parent_json.PlatForm;
+			if (!!employee) {
+				param.Modifier = employee.EmpCode;
+			}
+			console.log(Parent_json);
+			PublicComm.Ajax("POST", "/Authority/Privilege/UpdateEmpPrivilege", param, true, function (result) {
+				if (result.Code == 2000) {
+					alert("保存成功");
+				}
+				else {
+					alert(result.Messege);
+				}
+			});
+		}		
+	},
+	SavePrivToPosition: function () {
+		var codes = "";
+		var treeObj = $.fn.zTree.getZTreeObj("systree"),
+			nodes = treeObj.getCheckedNodes(true),
+			v = "";
+		for (var i = 0; i < nodes.length; i++) {
+			codes += nodes[i].ModuleCode + ",";
+		}
+		var mod = PublicComm.GetServeDate();
+		var moddate = mod.Format("yyyy-MM-dd hh:mm:ss.S");
+		codejson = { 'ModulePrivList': codes.substring(0, codes.length - 1), 'ModDate': moddate };
+		layui.use("layer", function () {
+			var layer = layui.layer;
+			index = layer.open({
+				type: 2,
+				title: '保存权限到职位',
+				area: ['500px', '300px'], //宽高
+				content: 'system_multi.html',
+				scrollbar: false,//禁用滚动条
+				btnAlign: 'd'
+			})
+		});
+				
+	},
+	GetPrivByEmpCode: function (empcode) {
+		var Empcode = { 'EmpCode': empcode };
+		PublicComm.Ajax("POST", "/Authority/Privilege/GetPrivModuleByEmployee", Empcode, true, function (result) {
+			ControlComm.GetPrivTree($('#systree'), "/Authority/Privilege/GetPrivilegeTreeList", result.Data.ModulePrivList);
+		});
+	}
+}
+$(function () {
+	SystemForm.Init();
+});

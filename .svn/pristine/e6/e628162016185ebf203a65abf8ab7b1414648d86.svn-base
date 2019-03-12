@@ -1,0 +1,101 @@
+﻿<link rel="stylesheet" href="../../Content/ztree/metroStyle/hjc.min.css" media="all">
+<link rel="stylesheet" href="../../Content/ztree/metroStyle/metroStyle.css" media="all">
+<style>
+	.layui-form .layui-form-item .layui-input-block .layui-btn {
+		width: 140px;
+	}
+
+	#systree {
+		width: 300px;
+		height: 600px;
+		overflow: auto;
+	}
+</style>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+	<legend>系统设置</legend>
+</fieldset>
+<form class="layui-form" action="">
+	<div class="layui-form-item">
+	</div>
+</form>
+<form class="layui-form" action="">
+	<div class="div1 layui-form-item">
+		<div class="layui-row ">
+			<div class="layui-input-inline">
+				<a href="javascript:;" onclick="SaveClick()" class="layui-btn layui-btn-sm" style="margin-left:10px">职务授权</a>
+				<a href="javascript:;" class="layui-btn layui-btn-sm">保存权限到员工</a>
+				<a href="javascript:;" class="layui-btn layui-btn-sm">保存权限到职务</a>
+			</div>
+		</div>
+	</div>
+	<label class="layui-form-label">门店</label>
+	<div class="layui-input-inline">
+		<select id="selDepartment" lay-search=""></select>
+	</div>
+	<div class="div2 layui-form-item">
+		<div class="setting-equal">
+			<div id="systree" class="ztree ztree3"></div>
+		</div>
+	</div>
+</form>
+<style>
+	div.div1 {
+		float: right;
+		margin-right: 300px;
+		margin-top: 80px
+	}
+
+	.layui-btn {
+		margin: 10px 5px;
+		width: 134px
+	}
+
+	.layui-form-item {
+		clear: none
+	}
+
+	.layui-table {
+		width: 60%
+	}
+
+	div.div2 {
+		float: left
+	}
+</style>
+<script src="../../Content/ztree/jquery.ztree.all.min.js" charset="utf-8"></script>
+<script src="../Content/treetable/jquery.treetable.js" charset="utf-8"></script>
+<script src="../Content/jscustomer/SysNodeTree.js" charset="utf-8"></script>
+<script src="../../Content/jscustomer/PublicComm.js" charset="utf-8"></script>
+<script src="../../Content/jscustomer/ControlComm.js" charset="utf-8"></script>
+<script>
+	function SaveClick() {
+		var codes = "";
+		var treeObj = $.fn.zTree.getZTreeObj("systree"),
+			nodes = treeObj.getCheckedNodes(true),
+			v = "";
+		console.log(nodes);
+		for (var i = 0; i < nodes.length; i++) {
+			codes += nodes[i].ModuleCode + ",";
+		}
+		console.log(codes.substring(0, codes.length - 1));
+		var mod = PublicComm.GetServeDate();
+		var moddate = mod.Format("yyyy-MM-dd hh:mm:ss.S");
+		var codejson = { 'ModuleCode': codes.substring(0, codes.length - 1), 'ModDate': moddate };	
+		PublicComm.Ajax("POST", "/Authority/Privilege/UpdateEmpPrivilege", codejson, true, function (result) {
+			if (result.Code == 2000) {
+				alert("保存成功");
+			}
+			else {
+				alert(result.Messege);
+			}		
+		});				
+	};
+	layui.use('form', function () {
+		var form = layui.form;
+		form.render();
+		ControlComm.DepartmentBinding($('#selDepartment'),form);
+	});
+	$(function () {
+		ControlComm.GetPrivTree($('#systree'), "/Authority/Privilege/GetPrivilegeTreeList");		
+	});
+</script>

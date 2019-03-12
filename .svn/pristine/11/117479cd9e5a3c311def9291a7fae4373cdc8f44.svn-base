@@ -1,0 +1,138 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using Dapper;
+using ERP.Authority.Entity.SDTM;
+
+namespace ERP.Authority.DAL
+{
+    public class E_DepartmentDAL
+    {
+        /// <summary>
+        /// 获取所有部门列表并按照父子顺序排序
+        /// </summary>
+        /// <returns></returns>
+        public List<dynamic> GetAllDepartmentList()
+        {
+            string sql = @"
+SELECT  DeptName ,
+        Header ,
+        DeptNo ,
+        CityID ,
+        DeptID ,
+        DepartOnlyCode ,
+        ISNULL(Layer, 1) AS Layer ,
+        CASE WHEN ISNULL(Layer, 1) > 1
+             THEN SUBSTRING(DeptNo, 0, ISNULL(Layer, 1) * 2 - 1)
+             ELSE ''
+        END AS ParentDeptNo
+FROM    dbo.E_Department D ( NOLOCK )
+WHERE   D.FlagTrashed = 0
+        AND D.FlagDeleted = 0
+ORDER BY D.DeptNo ASC;";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<dynamic>(sql).ToList();
+            }
+        }
+
+        /// <summary>
+        /// 根据城市获取部门列表并按照父子顺序排序
+        /// </summary>
+        /// <returns></returns>
+        public List<dynamic> GetDepartmentListByCity(E_Department department)
+        {
+            string sql = @"
+SELECT  DeptName ,
+        Header ,
+        DeptNo ,
+        CityID ,
+        DeptID ,
+        DepartOnlyCode ,
+        ISNULL(Layer, 1) AS Layer ,
+        CASE WHEN ISNULL(Layer, 1) > 1
+             THEN SUBSTRING(DeptNo, 0, ISNULL(Layer, 1) * 2 - 1)
+             ELSE ''
+        END AS ParentDeptNo
+FROM    dbo.E_Department D ( NOLOCK )
+WHERE   D.FlagTrashed = 0
+        AND D.FlagDeleted = 0
+        AND D.CityID = @CityID
+ORDER BY D.DeptNo ASC;";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<dynamic>(sql, new { CityID = department.CityID}).ToList();
+            }
+        }
+
+        /// <summary>
+        /// 获取部门U+数据权限
+        /// </summary>
+        /// <param name="department"></param>
+        /// <returns></returns>
+        public List<dynamic> GetDeptPrivTreeTable(E_Department department)
+        {
+            string sql = @"
+SELECT  D.DeptName ,
+        D.Header ,
+        D.DeptNo ,
+        D.CityID ,
+        D.DeptID ,
+        D.DepartOnlyCode ,
+        ISNULL(D.Layer, 1) AS Layer ,
+        CASE WHEN ISNULL(D.Layer, 1) > 1
+             THEN SUBSTRING(D.DeptNo, 0, ISNULL(D.Layer, 1) * 2 - 1)
+             ELSE ''
+        END AS ParentDeptNo,
+        CASE WHEN fysel.DataCode IS NULL THEN 0 ELSE 1 END AS fysel,
+        CASE WHEN custsel.DataCode IS NULL THEN 0 ELSE 1 END AS custsel,
+        CASE WHEN publicowner.DataCode IS NULL THEN 0 ELSE 1 END AS publicowner,
+        CASE WHEN privateowner.DataCode IS NULL THEN 0 ELSE 1 END AS privateowner,
+        CASE WHEN commonowner.DataCode IS NULL THEN 0 ELSE 1 END AS commonowner,
+        CASE WHEN fyfellow.DataCode IS NULL THEN 0 ELSE 1 END AS fyfellow,
+        CASE WHEN custfellow.DataCode IS NULL THEN 0 ELSE 1 END AS custfellow
+FROM    dbo.E_Department D ( NOLOCK )
+        LEFT JOIN Priv_Department fysel ( NOLOCK ) ON fysel.DataCode = D.DepartOnlyCode
+                                                      AND fysel.TypeCode = 'dep-fy-sel'
+                                                      AND fysel.IsDel = 0
+                                                      AND fysel.PlatForm = 1
+                                                      AND fysel.DepartOnlyCode = @DepartOnlyCode
+        LEFT JOIN Priv_Department custsel ( NOLOCK ) ON custsel.DataCode = D.DepartOnlyCode
+                                                        AND custsel.TypeCode = 'dep-cust-sel'
+                                                        AND custsel.IsDel = 0
+                                                        AND custsel.PlatForm = 1
+                                                        AND custsel.DepartOnlyCode = @DepartOnlyCode
+        LEFT JOIN Priv_Department publicowner ( NOLOCK ) ON publicowner.DataCode = D.DepartOnlyCode 
+                                                            AND publicowner.TypeCode = 'dep-public-owner'
+                                                            AND publicowner.IsDel = 0
+                                                            AND publicowner.PlatForm = 1
+                                                            AND publicowner.DepartOnlyCode = @DepartOnlyCode
+        LEFT JOIN Priv_Department privateowner ( NOLOCK ) ON privateowner.DataCode = D.DepartOnlyCode
+                                                             AND privateowner.TypeCode = 'dep-private-owner'
+                                                             AND privateowner.IsDel = 0
+                                                             AND privateowner.PlatForm = 1
+                                                             AND privateowner.DepartOnlyCode = @DepartOnlyCode
+        LEFT JOIN Priv_Department commonowner ( NOLOCK ) ON commonowner.DataCode = D.DepartOnlyCode
+                                                            AND commonowner.TypeCode = 'dep-common-owner'
+                                                            AND commonowner.IsDel = 0
+                                                            AND commonowner.PlatForm = 1
+                                                            AND commonowner.DepartOnlyCode = @DepartOnlyCode
+        LEFT JOIN Priv_Department fyfellow ( NOLOCK ) ON fyfellow.DataCode = D.DepartOnlyCode
+                                                         AND fyfellow.TypeCode = 'dep-fy-fellow'
+                                                         AND fyfellow.IsDel = 0
+                                                         AND fyfellow.PlatForm = 1
+                                                         AND fyfellow.DepartOnlyCode = @DepartOnlyCode
+        LEFT JOIN Priv_Department custfellow ( NOLOCK ) ON custfellow.DataCode = D.DepartOnlyCode
+                                                           AND custfellow.TypeCode = 'dep-cust-fellow'
+                                                           AND custfellow.IsDel = 0
+                                                           AND custfellow.PlatForm = 1
+                                                           AND custfellow.DepartOnlyCode = @DepartOnlyCode
+WHERE   D.FlagTrashed = 0
+        AND D.FlagDeleted = 0
+ORDER BY D.DeptNo ASC;";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<dynamic>(sql, new { DepartOnlyCode = department.DepartOnlyCode }).ToList();
+            }
+        }
+    }
+}

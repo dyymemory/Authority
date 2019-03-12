@@ -1,0 +1,226 @@
+﻿<link rel="stylesheet" href="../../Content/layui/css/layui.css" media="all">
+<link rel="stylesheet" href="../../Content/ztree/metroStyle/hjc.min.css" media="all">
+<link rel="stylesheet" href="../../Content/ztree/metroStyle/metroStyle.css" media="all">
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>职务权限</legend>
+</fieldset>
+<form class="layui-form">
+    <div class="layui-form-item">
+        <label class="">当前职务：武汉-经纪人</label>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+            <ul class="layui-tab-title">
+                <li class="layui-this">模块权限</li>
+                <li>数据权限</li>
+            </ul>
+            <div class="layui-tab-content" style="height: 100px;">
+                <div class="layui-tab-item layui-show">
+                    <div class="layui-form-item">
+                        <div class="setting-equal">
+                            <div id="tree" class="ztree ztree3"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-tab-item">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">管辖权限：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="jurisdictionSel" value="0" title="无">
+                            <input type="radio" name="jurisdictionSel" value="1" title="本人" checked="">
+                            <input type="radio" name="jurisdictionSel" value="2" title="本部">
+                            <input type="radio" name="jurisdictionSel" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">公盘看：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="publicSel" value="0" title="无">
+                            <input type="radio" name="publicSel" value="1" title="本人" checked="">
+                            <input type="radio" name="publicSel" value="2" title="本部">
+                            <input type="radio" name="publicSel" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">私盘看：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="privateSel" value="0" title="无">
+                            <input type="radio" name="privateSel" value="1" title="本人" checked="">
+                            <input type="radio" name="privateSel" value="2" title="本部">
+                            <input type="radio" name="privateSel" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">特盘看：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="specialSel" value="0" title="无">
+                            <input type="radio" name="specialSel" value="1" title="本人" checked="">
+                            <input type="radio" name="specialSel" value="2" title="本部">
+                            <input type="radio" name="specialSel" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">封盘看：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="finalSel" value="0" title="无">
+                            <input type="radio" name="finalSel" value="1" title="本人" checked="">
+                            <input type="radio" name="finalSel" value="2" title="本部">
+                            <input type="radio" name="finalSel" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">公盘看详情：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="publicSelDetail" value="0" title="无">
+                            <input type="radio" name="publicSelDetail" value="1" title="本人" checked="">
+                            <input type="radio" name="publicSelDetail" value="2" title="本部">
+                            <input type="radio" name="publicSelDetail" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">私盘看详情：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="privateSelDetail" value="0" title="无">
+                            <input type="radio" name="privateSelDetail" value="1" title="本人" checked="">
+                            <input type="radio" name="privateSelDetail" value="2" title="本部">
+                            <input type="radio" name="privateSelDetail" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">特盘看详情：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="specialSelDetail" value="0" title="无">
+                            <input type="radio" name="specialSelDetail" value="1" title="本人" checked="">
+                            <input type="radio" name="specialSelDetail" value="2" title="本部">
+                            <input type="radio" name="specialSelDetail" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">封盘看详情：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="finalSelDetail" value="0" title="无">
+                            <input type="radio" name="finalSelDetail" value="1" title="本人" checked="">
+                            <input type="radio" name="finalSelDetail" value="2" title="本部">
+                            <input type="radio" name="finalSelDetail" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">公盘设：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="publicModify" value="0" title="无">
+                            <input type="radio" name="publicModify" value="1" title="本人" checked="">
+                            <input type="radio" name="publicModify" value="2" title="本部">
+                            <input type="radio" name="publicModify" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">私盘设：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="privateModify" value="0" title="无">
+                            <input type="radio" name="privateModify" value="1" title="本人" checked="">
+                            <input type="radio" name="privateModify" value="2" title="本部">
+                            <input type="radio" name="privateModify" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">特盘设：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="specialModify" value="0" title="无">
+                            <input type="radio" name="specialModify" value="1" title="本人" checked="">
+                            <input type="radio" name="specialModify" value="2" title="本部">
+                            <input type="radio" name="specialModify" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">封盘设：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="finalModify" value="0" title="无">
+                            <input type="radio" name="finalModify" value="1" title="本人" checked="">
+                            <input type="radio" name="finalModify" value="2" title="本部">
+                            <input type="radio" name="finalModify" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">公客：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="publicCusSel" value="0" title="无">
+                            <input type="radio" name="publicCusSel" value="1" title="本人" checked="">
+                            <input type="radio" name="publicCusSel" value="2" title="本部">
+                            <input type="radio" name="publicCusSel" value="3" title="跨部">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">私客：</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="privateCusSel" value="0" title="无">
+                            <input type="radio" name="privateCusSel" value="1" title="本人" checked="">
+                            <input type="radio" name="privateCusSel" value="2" title="本部">
+                            <input type="radio" name="privateCusSel" value="3" title="跨部">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script src="../../Content/Jquery/jquery-1.11.3.min.js" charset="utf-8"></script>
+<script src="../../Content/layui/layui.js" charset="utf-8"></script>
+<script src="../../Content/ztree/jquery.ztree.all.min.js" charset="utf-8"></script>
+<!-- 注意：如果你直接复制所有代码到本地，上述js路径需要改成你本地的 -->
+<script>
+    layui.use(['element', 'form'], function () {
+        var element = layui.element,
+            form = layui.form;
+        form.render();
+
+        $('.site-demo-active').on('click', function () {
+            var othis = $(this), type = othis.data('type');
+            active[type] ? active[type].call(this, othis) : '';
+        });
+    });
+
+    $(function () {
+        var setting = {
+            view: {
+                selectedMulti: true
+            },
+            check: {
+                enable: true,
+                chkStyle: "checkbox",
+                chkboxType: { "Y": "ps", "N": "ps" }
+            },
+            data: {
+                simpleData: {
+                    enable: true,
+                    idKey: "ID",
+                    pIdKey: "ParentID",
+                    rootPId: 0
+                }
+                    , key: {
+                        checked: "checked",
+                        name: "Name",
+                        id: "ID"
+                    }
+            },
+            edit: {
+                enable: false
+            }
+        };
+        var zTreeNodes = [
+               { ID: 1, ParentID: 0, Name: "一级部门1", checked: true },
+               { ID: 2, ParentID: 1, Name: "二级部门1", checked: true },
+               { ID: 3, ParentID: 1, Name: "二级部门2" },
+               { ID: 4, ParentID: 2, Name: "三级部门1", checked: true },
+               { ID: 5, ParentID: 2, Name: "三级部门2" },
+               { ID: 6, ParentID: 4, Name: "四级部门1", checked: true },
+               { ID: 7, ParentID: 0, Name: "一级部门2" },
+               { ID: 8, ParentID: 7, Name: "二级部门3" },
+               { ID: 9, ParentID: 7, Name: "二级部门2" },
+               { ID: 10, ParentID: 8, Name: "三级部门1" },
+               { ID: 11, ParentID: 8, Name: "三级部门2" },
+               { ID: 12, ParentID: 10, Name: "四级部门1" },
+        ];
+        $.fn.zTree.init($("#tree"), setting, zTreeNodes);
+    });
+</script>

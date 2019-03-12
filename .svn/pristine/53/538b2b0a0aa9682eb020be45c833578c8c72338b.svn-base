@@ -1,0 +1,50 @@
+﻿var SystemMulti = {
+	Init: function () {
+		layui.use(['form'], function () {
+			var form = layui.form,
+				table = layui.table;
+			form.render();
+			ControlComm.CityBinding($('#City'), form);
+		});
+	},
+	Cancel: function () {
+		var Index = parent.index;
+		console.log(Index);
+		parent.layer.close(Index);
+	},
+	Confirm: function () {
+		var CodeJson = parent.codejson;
+		JSON = parent.Parent_json;
+		PublicComm.Ajax("POST", "/Authority/Privilege/UpdatePrivToPosition", CodeJson, true, function (result) {
+			if (result.Code == 2000) {
+				alert("保存到职务成功");
+				console.log(JSON);
+				SystemMulti.MultiSave(JSON.PositionID, CodeJson);
+			}
+			else {
+				alert(result.Messege);
+			}
+		});
+	},
+	MultiSave: function (positionid, codejson) {
+		SystemMulti.GetAllEmpByPositionID(positionid, codejson);		
+	},
+	GetAllEmpByPositionID: function (positionID, codejson) {
+		var Positionidjson = { 'PositionID': positionID };
+		PublicComm.Ajax("POST", "/Authority/Employee/GetAllEmpByPositionID", Positionidjson, true, function (result) {
+			if (result.Code == 2000) {
+				console.log(result.data);
+				for (item in result.data) {
+					var CodeJson = { 'EmpCode': item.EmpCode, 'ModulePrivList': codejson.ModulePrivList };
+					PublicComm.Ajax("POST", "/Authority/Privilege/MultiUpdatePrivToEmp", CodeJson, true, function (result) { });
+				}				
+			}
+			else {
+				alert(result.Messege);
+			}
+		});
+	},
+}
+$(function () {
+	SystemMulti.Init();
+});

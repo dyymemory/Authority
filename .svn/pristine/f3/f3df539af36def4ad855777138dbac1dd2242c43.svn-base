@@ -1,0 +1,78 @@
+﻿/*JS 常用控件*/
+var ControlComm = {
+    CityBinding: function (element, form) {
+        PublicComm.Ajax("POST", "/Authority/City/GetAllCityList", null, true, function (result) {
+            var strHTML = '<option value="">直接选择或搜索选择</option>';
+            for (var index in result.Data) {
+                strHTML += '<option value="' + result.Data[index].CityID + '">' + result.Data[index].CityName + '</option>';
+            }
+            $(element).html(strHTML);
+            form.render();
+        });
+    },
+    DepartmentBinding: function (element, form) {
+        PublicComm.Ajax("POST", "/Authority/Department/GetAllDepartmentList", null, true, function (result) {
+            var strHTML = '<option value="">直接选择或搜索选择</option>';
+            for (var index in result.Data) {
+                strHTML += '<option value="' + result.Data[index].DeptID + '">[' + result.Data[index].Header + ']' + result.Data[index].DeptName + '</option>';
+            }
+            $(element).html(strHTML);
+            form.render();
+        });
+    },
+    EmployeeBinding: function (element, form, param) {
+        PublicComm.Ajax ("POST", "/Authority/Employee/GetEmployeeListByDeptID", param, true, function (result) {
+            var strHTML = '<option value="">直接选择或搜索选择</option>';
+            for (var index in result.Data) {
+                strHTML += '<option value="' + result.Data[index].EmpID + '">[' + result.Data[index].EmpNo + ']' + result.Data[index].EmpName + '</option>';
+            }
+            $(element).html(strHTML);
+            form.render();
+        });
+    },
+    PositionBinding: function (element, form) {
+        PublicComm.Ajax("POST", "/Authority/Position/GetAllPositionList", null, true, function (result) {
+            var strHTML = '<option value="">直接选择或搜索选择</option>';
+            for (var index in result.Data) {
+                strHTML += '<option value="' + result.Data[index].PositionID + '">' + result.Data[index].PositionName + '</option>';
+            }
+            $(element).html(strHTML);
+            form.render();
+        });
+	},
+	GetPrivTree: function (element,url) {
+		var setting = {
+			view: {
+				selectedMulti: true
+			},
+			check: {
+				enable: true,
+				chkStyle: "checkbox",
+				chkboxType: { "Y": "ps", "N": "ps" }
+			},
+			data: {
+				simpleData: {
+					enable: true,
+					idKey: "ModuleCode",
+					pIdKey: "ParentCode",
+					rootPId: 0
+				}
+				,
+				key: {
+					checked: "checked",
+					name: "ModuleName",
+					id: "ModuleCode"
+				}
+			},
+			edit: {
+				enable: false
+			}
+		};
+		var obj = PublicComm.Ajax("POST", url, null, true, function (result) {
+			console.log(result.Data);
+			$(document).ready(function () {
+				$.fn.zTree.init(element, setting, result.Data);
+			});
+		});
+	},	
+}

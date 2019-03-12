@@ -1,0 +1,74 @@
+﻿var DepartmentCopyAreaToDep = {
+	DepartOnlyCodeSelected: window.parent.DepartmentIndex.AreaDepartOnlyCodeSelected,//主树选中的部门code
+	TypeCodeSelected: window.parent.DepartmentIndex.AreaTypeCodeSelected,//radio 选中的按钮
+	CopyedSelectedNodes: [],//要保存权限的门店集合
+	Init: function () {
+		var radios = document.getElementsByName('TypeCodeArea');
+		// 初始化 radio 勾选状态 
+		for (var i = 0; i < radios.length; i++) {
+			if (radios[i].value == DepartmentCopyAreaToDep.TypeCodeSelected) {
+				radios[i].checked = true;
+				break;
+			}
+		}
+		var InitCityID = location.hash.substr(1);
+		layui.use(['form'], function () {
+			var form = layui.form;
+			form.render();
+			ControlComm.CityBinding($('#City'), form, InitCityID);
+			form.on('select(City)', function () {
+				ControlComm.AreaBinding($('#District'), form, $('#City').val());
+				ControlComm.GetDeptTree($('#copyToDataTree'), $('#City').val());
+			});
+			form.on('select(District)', function () {
+				var listSorted;
+				$('#District').val() == "" ? listSorted = null : listSorted = DepartmentCopyAreaToDep.GetTreeListSorted($('#District').find('option:selected').eq(0), CacheHelper.GetDepartment($('#City').val()));
+				DepartmentCopyAreaToDep.RefreshSelectedNodes("copyToDataTree", DepartmentCopyAreaToDep.CopyedSelectedNodes);
+				ControlComm.GetDeptTree($('#copyToDataTree'), $('#City').val(), DepartmentCopyAreaToDep.CopyedSelectedNodes, listSorted);
+			});
+			var typeCode = $('input:radio[name=TypeCode]:checked').val();
+			PublicComm.Ajax('POST', '/Authority/Department/GetDepartmentListByCity', { 'CityID': InitCityID, 'DepartOnlyCode': DepartmentCopyAreaToDep.DepartOnlyCodeSelected, 'TypeCodeList': [typeCode], 'ViewType': 1 }, true, function (result) {
+				if (!!result) {
+					var node = [];
+					for (var i = 0; i < result.Data.length; i++) {
+						node.push(result.Data[i].DataCode);
+					};
+					ControlComm.GetDeptTreeNoCheck($('#deptDataTree'), InitCityID, node);
+				}
+			});
+			ControlComm.AreaBinding($('#District'), form, InitCityID);
+			ControlComm.GetDeptTree($('#copyToDataTree'), InitCityID);
+			// radio  选择事件
+			form.on('radio(TypeCodeArea)', function () {
+				var typeCode = $('input:radio[name=TypeCode]:checked').val();
+				DepartmentCopyAreaToDep.TypeCodeSelected = typeCode;
+				var deptDataTree = $.fn.zTree.getZTreeObj("deptDataTree");
+				if (!!deptDataTree) {
+					PublicComm.Ajax('POST', '/Authority/Privilege/GetPrivDepartmentList', { 'CityID': InitCityID, 'DepartOnlyCode': DepartmentCopyAreaToDep.DepartOnlyCodeSelected, 'TypeCodeList': [typeCode], 'ViewType': 1 }, true, function (result) {
+						deptDataTree.checkAllNodes(false);
+						var data = [];
+						if (!!result) {
+							for (var i = 0; i < result.Data.length; i++) {
+								var node = deptDataTree.getNodeByParam("DepartOnlyCode", result.Data[i].DataCode);
+								if (node != null) {
+									deptDataTree.checkNode(node, true);
+								}
+							};
+							data = result.Data;
+						};
+					});
+				};
+			});
+		});
+	},
+	Cancel: function () {
+		var Index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+		parent.layer.close(Index);
+	},
+	Confirm: function () {
+		alert("zzz");
+	},
+}
+$(function () {
+	DepartmentCopyAreaToDep.Init();
+});

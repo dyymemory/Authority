@@ -1,0 +1,600 @@
+﻿var DepartmentIndex = {
+    TabType1: true,//U+门前权限第一次加载
+    TabType2: true,//U+地理权限第一次加载
+    TabDivisition1: true,//门店管辖-能看我的第一次加载
+    TabDept1: true,//U+门前权限-能看我的第一次加载
+    TabArea1: true,//U+地理权限-能看我的第一次加载
+	DivisitionCanSeeSelectedNodes: [],//管辖权限我能看的部门树选中节点
+	DepartmentDeptCanSeeSelectedNodes: [], //U+门店权限我能看的部门树选中节点
+	TypeCodeSelected:"",//U+门店权限我能看的 radio 选中的
+    DivisitionBeSeenSelectedNodes: [],//管辖权限能看我的部门树选中节点
+    FySelCanSeeSelectedNodes: [],//查看房源我能看的部门树选中节点
+    FySelBeSeenSelectedNodes: [],//查看房源能看我的部门树选中节点
+    CustSelCanSeeSelectedNodes: [],//查看客源我能看的部门树选中节点
+    CustSelBeSeenSelectedNodes: [],//查看客源能看我的部门树选中节点
+    PublicOwnerCanSeeSelectedNodes: [],//公盘看业主我能看的部门树选中节点
+    PublicOwnerBeSeenSelectedNodes: [],//公盘看业主能看我的部门树选中节点
+    PrivateOwnerCanSeeSelectedNodes: [],//私盘看业主我能看的部门树选中节点
+    PrivateOwnerBeSeenSelectedNodes: [],//私盘看业主能看我的部门树选中节点
+    CommonOwnerCanSeeSelectedNodes: [],//公共池房源看业主我能看的部门树选中节点
+    CommonOwnerBeSeenSelectedNodes: [],//公共池房源看业主能看我的部门树选中节点
+    FyFellowCanSeeSelectedNodes: [],//房源看跟进我能看的部门树选中节点
+    FyFellowBeSeenSelectedNodes: [],//房源看跟进能看我的部门树选中节点
+    CustFellowCanSeeSelectedNodes: [],//客源看跟进我能看的部门树选中节点
+    CustFellowBeSeenSelectedNodes: [],//客源看跟进能看我的部门树选中节点
+    Init: function () {
+        layui.use(['element', 'form', 'layer'], function () {
+            var element = layui.element,
+                form = layui.form,
+                layer = layui.layer;
+
+            //var user = CacheHelper.GetUser();
+
+            //面板监听事件
+            $('.site-demo-active').on('click', function () {
+                var othis = $(this), type = othis.data('type');
+                active[type] ? active[type].call(this, othis) : '';
+            });
+
+            form.render();
+
+            form.on('select(City)', function () {
+                ControlComm.DepartmentBinding($('#Department'), form, $('#City').val());
+                DepartmentIndex.GetDeptTreeNoCheck($('#deptTree'), $('#City').val());
+            });
+            form.on('select(Department)', function () {
+                var listSorted = DepartmentIndex.GetTreeListSorted($('#Department').find('option:selected').eq(0), CacheHelper.GetDepartment($('#City').val()));
+                DepartmentIndex.GetDeptTreeNoCheck($('#deptTree'), $('#City').val(), listSorted);
+            });
+
+            //门店管辖我能看的事件监听
+            form.on('select(CityDivisitionCanSee)', function () {
+                ControlComm.DepartmentBinding($('#DepartmentDivisitionCanSee'), form, $('#CityDivisitionCanSee').val());
+                var dept = DepartmentIndex.GetDeptTreeSelectedNodes();
+                if (!!dept && dept.DepartOnlyCode > 0) {
+                    PublicComm.Ajax('POST', '/Authority/Privilege/GetPrivDepartmentList', { 'CityID': $('#CityDivisitionCanSee').val(), 'DepartOnlyCode': dept.DepartOnlyCode, 'TypeCode': 'dep-divisition-sel', 'ViewType': 1 }, true, function (result) {
+                        DepartmentIndex.DivisitionCanSeeSelectedNodes = [];
+                        if (!!result) {
+                            layui.each(result.Data, function () {
+                                DepartmentIndex.DivisitionCanSeeSelectedNodes.push(this.DataCode);
+                            });
+                        }
+                        ControlComm.GetDeptTree($('#TreeDivisitionCanSee'), $('#CityDivisitionCanSee').val(), DepartmentIndex.DivisitionCanSeeSelectedNodes);
+                    });
+                } else {
+                    ControlComm.GetDeptTree($('#TreeDivisitionCanSee'), $('#CityDivisitionCanSee').val());
+                }
+            });
+            form.on('select(DepartmentDivisitionCanSee)', function () {
+                DepartmentIndex.RefreshSelectedNodes("TreeDivisitionCanSee", DepartmentIndex.DivisitionCanSeeSelectedNodes);
+                var listSorted = $('#DepartmentDivisitionCanSee').val() == '' ? null : DepartmentIndex.GetTreeListSorted($('#DepartmentDivisitionCanSee').find('option:selected').eq(0), CacheHelper.GetDepartment($('#CityDivisitionCanSee').val()));
+                ControlComm.GetDeptTree($('#TreeDivisitionCanSee'), $('#CityDivisitionCanSee').val(), DepartmentIndex.DivisitionCanSeeSelectedNodes, listSorted);
+            });
+            $('#SaveDivisitionCanSee').on('click', function () {
+                var dept = DepartmentIndex.GetDeptTreeSelectedNodes();
+                if (!DepartmentIndex.ValidateDeptTreeSelected(dept)) {
+                    return;
+                }
+                DepartmentIndex.RefreshSelectedNodes("TreeDivisitionCanSee", DepartmentIndex.DivisitionCanSeeSelectedNodes);
+                var param = {};
+                param.DepartOnlyCode = dept.DepartOnlyCode;
+                param.CityID = $('#CityDivisitionCanSee').val();
+                param.DepDivisitionSel = DepartmentIndex.DivisitionCanSeeSelectedNodes;
+                param.TypeCode = 'dep-divisition-sel';
+                param.ViewType = 1;
+                PublicComm.Ajax("POST", "/Authority/Privilege/SavePrivDepartment", param, true, function (result) {
+                    if (!!result) {
+                        if (result.Code == 2000) {
+                            layer.alert("保存成功");
+                        } else {
+                            layer.alert("保存失败，原因：" + result.Message);
+                        }
+                    }
+                });
+            });
+            $('#CheckedAllDivisitionCanSee').on('click', function () {
+                DepartmentIndex.CheckAllNodes("TreeDivisitionCanSee", true);
+            });
+            $('#UnCheckedAllDivisitionCanSee').on('click', function () {
+                DepartmentIndex.CheckAllNodes("TreeDivisitionCanSee", false);
+            });
+
+            //门店管辖能看我的事件监听
+            form.on('select(CityDivisitionBeSeen)', function () {
+                ControlComm.DepartmentBinding($('#DepartmentDivisitionBeSeen'), form, $('#CityDivisitionBeSeen').val());
+                var dept = DepartmentIndex.GetDeptTreeSelectedNodes();
+                if (!!dept && dept.DepartOnlyCode > 0) {
+                    PublicComm.Ajax('POST', '/Authority/Privilege/GetPrivDepartmentList', { 'CityID': $('#CityDivisitionCanSee').val(), 'DataCode': dept.DepartOnlyCode, 'TypeCode': 'dep-divisition-sel', 'ViewType': 2 }, true, function (result) {
+                        DepartmentIndex.DivisitionBeSeenSelectedNodes = [];
+                        if (!!result) {
+                            layui.each(result.Data, function () {
+                                DepartmentIndex.DivisitionBeSeenSelectedNodes.push(this.DepartOnlyCode);
+                            });
+                        }
+                        ControlComm.GetDeptTree($('#TreeDivisitionBeSeen'), $('#CityDivisitionBeSeen').val(), DepartmentIndex.DivisitionBeSeenSelectedNodes);
+                    });
+                } else {
+                    ControlComm.GetDeptTree($('#TreeDivisitionBeSeen'), $('#CityDivisitionBeSeen').val());
+                }
+            });
+            form.on('select(DepartmentDivisitionBeSeen)', function () {
+                DepartmentIndex.RefreshSelectedNodes("TreeDivisitionBeSeen", DepartmentIndex.DivisitionBeSeenSelectedNodes);
+                var listSorted = $('#DepartmentDivisitionBeSeen').val() == '' ? null : DepartmentIndex.GetTreeListSorted($('#DepartmentDivisitionBeSeen').find('option:selected').eq(0), CacheHelper.GetDepartment($('#CityDivisitionBeSeen').val()));
+                ControlComm.GetDeptTree($('#TreeDivisitionBeSeen'), $('#CityDivisitionBeSeen').val(), DepartmentIndex.DivisitionBeSeenSelectedNodes, listSorted);
+            });
+            $('#SaveDivisitionBeSeen').on('click', function () {
+                var dept = DepartmentIndex.GetDeptTreeSelectedNodes();
+                if (!DepartmentIndex.ValidateDeptTreeSelected(dept)) {
+                    return;
+                }
+                DepartmentIndex.RefreshSelectedNodes("TreeDivisitionBeSeen", DepartmentIndex.DivisitionBeSeenSelectedNodes);
+                var param = {};
+                param.DataCode = dept.DepartOnlyCode;
+                param.CityID = $('#CityDivisitionBeSeen').val();
+                param.DepDivisitionSel = DepartmentIndex.DivisitionBeSeenSelectedNodes;
+                param.ViewType = 2;
+                PublicComm.Ajax("POST", "/Authority/Privilege/SavePrivDepartment", param, true, function (result) {
+                    if (!!result) {
+                        if (result.Code == 2000) {
+                            layer.alert("保存成功");
+                        } else {
+                            layer.alert("保存失败，原因：" + result.Message);
+                        }
+                    }
+                });
+            });
+            $('#CheckedAllDivisitionBeSeen').on('click', function () {
+                DepartmentIndex.CheckAllNodes("TreeDivisitionBeSeen", true);
+            });
+            $('#UnCheckedAllDivisitionBeSeen').on('click', function () {
+                DepartmentIndex.CheckAllNodes("TreeDivisitionBeSeen", false);
+            });
+
+            form.on('select(CityDeptCanSee)', function () {
+                ControlComm.DepartmentBinding($('#DepartmentDeptCanSee'), form, $('#CityDeptCanSee').val());
+                ControlComm.GetDeptTree($('#deptDataTree'), $('#CityDeptCanSee').val());
+                DepartmentIndex.GetTreeTable(form, $('#CityDeptCanSee').val());
+            });
+            form.on('select(DepartmentDeptCanSee)', function () {
+                var listSorted = DepartmentIndex.GetTreeListSorted($('#DepartmentDeptCanSee').find('option:selected').eq(0), CacheHelper.GetDepartment($('#CityDeptCanSee').val()));
+                ControlComm.GetDeptTree($('#deptDataTree'), $('#CityDeptCanSee').val(), null, listSorted);
+                DepartmentIndex.GetTreeTable(form, $('#CityDeptCanSee').val(), listSorted);
+            });
+
+            form.on('select(CityDeptBeSeen)', function () {
+                ControlComm.DepartmentBinding($('#DepartmentDeptBeSeen'), form, $('#CityDeptBeSeen').val());
+                ControlComm.GetDeptTree($('#deptDataTreeBeSeen'), $('#CityDeptBeSeen').val());
+            });
+            form.on('select(DepartmentDeptBeSeen)', function () {
+                var listSorted = DepartmentIndex.GetTreeListSorted($('#DepartmentDeptBeSeen').find('option:selected').eq(0), CacheHelper.GetDepartment($('#CityDeptBeSeen').val()));
+                ControlComm.GetDeptTree($('#deptDataTreeBeSeen'), $('#CityDeptBeSeen').val(), null, listSorted);
+            });
+
+            form.on('select(CityAreaCanSee)', function () {
+                ControlComm.DepartmentBinding($('#DepartmentAreaCanSee'), form, $('#CityAreaCanSee').val());
+            });
+            form.on('select(CityAreaBeSeen)', function () {
+                ControlComm.DepartmentBinding($('#DepartmentAreaBeSeen'), form, $('#CityAreaBeSeen').val());
+            });
+
+            $('#SaveDivisitionCanSee').on('click', function () {
+                var dept = DepartmentIndex.GetDeptTreeSelectedNodes();
+                if (!DepartmentIndex.ValidateDeptTreeSelected(dept)) {
+                    return;
+                }
+                var treeObj = $.fn.zTree.getZTreeObj("TreeDivisitionCanSee");
+                if (!!treeObj) {
+                    var nodes = treeObj.getCheckedNodes(true);
+                    if (!!nodes) {
+                        var arrDataCode = [];
+                        layui.each(nodes, function () {
+                            arrDataCode.push(this.DepartOnlyCode);
+                        });
+                        var param = {};
+                        param.DepartOnlyCode = dept.DepartOnlyCode;
+                        param.CityID = $('#CityDivisitionCanSee').val();
+                        param.DepDivisitionSel = arrDataCode;
+                        PublicComm.Ajax("POST", "/Authority/Privilege/SaveDivisitionPrivDepartment", param, true, function (result) {
+                            if (!!result) {
+                                if (result.Code == 2000) {
+                                    layer.alert("保存成功");
+                                } else {
+                                    layer.alert("保存失败，原因：" + result.Message);
+                                }
+                            }
+                        });
+                    }
+                }
+			});
+			// U+门店权限 我能看的 复制权限到门店
+			$('#CopyTypeCode').on('click', function () {
+				var treeObj = $.fn.zTree.getZTreeObj("deptDataTree");
+				if (!!treeObj) {
+					DepartmentIndex.DepartmentDeptCanSeeSelectedNodes = treeObj.getCheckedNodes(true);//勾选的部门
+					var CityID = $('#CityDeptCanSee').val();
+					var DeptID = $("#DepartmentDeptCanSee").val();
+					console.log(DeptID);
+					layui.use("layer", function () {
+						var layer = layui.layer;
+						index = layer.open({
+							type: 2,
+							title: '',
+							area: ['53%', '80%'], //宽高
+							content: 'department/department_copyprivtodep.html#' + CityID + '',
+							scrollbar: false,//禁用滚动条
+							btnAlign: 'd'
+						})
+					});	
+				}
+			});
+
+            ControlComm.CityBinding($('#City'), form);
+            ControlComm.CityBinding($('#CityDivisitionCanSee'), form);
+            ControlComm.CityBinding($('#CityDivisitionBeSeen'), form);
+            ControlComm.CityBinding($('#CityDeptCanSee'), form);
+            ControlComm.CityBinding($('#CityDeptBeSeen'), form);
+            ControlComm.CityBinding($('#CityAreaCanSee'), form);
+            ControlComm.CityBinding($('#CityAreaBeSeen'), form);
+
+            //$('#Search').on('click', function () {
+            //    var param = {};
+            //    if (!$('#City').val()) {
+            //        layer.msg("请选择城市");
+            //        return;
+            //    } else {
+            //        param.CityID = $('#City').val();
+            //    }
+            //    DepartmentIndex.GetDeptTreeNoCheck($('#deptTree'), param);
+            //});
+
+            $('#oneType').hide();
+            //U+门店权限radio事件
+            form.on('radio(TypeCode)', function () {
+				var typeCode = $('input:radio[name=TypeCode]:checked').val();
+				DepartmentIndex.TypeCodeSelected = typeCode;
+                if (typeCode == 'all') {
+                    $('#allType').show();
+                    $('#oneType').hide();
+                } else {
+                    $('#allType').hide();
+                    $('#oneType').show();
+                    switch (typeCode) {
+                        case 'dep-fy-sel':
+
+                            break;
+                        case 'dep-cust-sel':
+
+                            break;
+                        case 'dep-public-owner':
+
+                            break;
+                        case 'dep-private-owner':
+
+                            break;
+                        case 'dep-common-owner':
+
+                            break;
+                        case 'dep-fy-fellow':
+
+                            break;
+                        case 'dep-cust-fellow':
+
+                            break;
+                    }
+                }
+            });
+
+            //管辖权限-U+门店权限-U+地理权限面板监听事件
+            element.on('tab(TabType)', function (data) {
+                //U+门店权限-我能看的
+                if (DepartmentIndex.TabType1 && data.index == 1) {
+                    DepartmentIndex.TabType1 = false;
+                }
+                    //U+地理权限-我能看的
+                else if (DepartmentIndex.TabType2 && data.index == 2) {
+                    DepartmentIndex.TabType2 = false;
+                }
+            });
+
+            //管辖权限--能看我的面板事件
+            element.on('tab(TabDivisition)', function (data) {
+                if (DepartmentIndex.TabDivisition1 && data.index == 1) {
+                    DepartmentIndex.TabDivisition1 = false;
+                }
+            });
+
+            //U+门店权限--能看我的面板事件
+            element.on('tab(TabDept)', function (data) {
+                if (DepartmentIndex.TabDept1 && data.index == 1) {
+                    DepartmentIndex.TabDept1 = false;
+                }
+            });
+
+            //U+地理权限--能看我的面板事件
+            element.on('tab(TabArea)', function (data) {
+                if (DepartmentIndex.TabArea1 && data.index == 1) {
+                    DepartmentIndex.TabArea1 = false;
+                }
+            });
+        });
+    },
+    RefreshSelectedNodes: function (treeId, arr) {
+        var zTreeObj = $.fn.zTree.getZTreeObj(treeId);
+        if (!!zTreeObj) {
+            var unCheckedNodes = zTreeObj.getCheckedNodes(false);
+            layui.each(unCheckedNodes, function () {
+                arr.splice(arr.indexOf(this.DepartOnlyCode), 1);
+            });
+            var checkedNodes = zTreeObj.getCheckedNodes(true);
+            layui.each(checkedNodes, function () {
+                if (arr.indexOf(this.DepartOnlyCode) == -1) {
+                    arr.push(this.DepartOnlyCode);
+                }
+            });
+        }
+    },
+    CheckAllNodes: function (treeId, bool) {
+        var zTreeObj = $.fn.zTree.getZTreeObj(treeId);
+        if (!!zTreeObj) {
+            zTreeObj.checkAllNodes(bool);
+        }
+    },
+    GetDeptTreeNoCheck: function (element, cityid, listSorted) {
+        var zTree;
+        var zTreeOnClick = function (event, treeId, treeNode) {
+            //门限管辖权限我能看的
+            var TreeDivisitionCanSee = $.fn.zTree.getZTreeObj("TreeDivisitionCanSee");
+            if (!!TreeDivisitionCanSee) {
+                PublicComm.Ajax('POST', '/Authority/Privilege/GetPrivDepartmentList', { 'CityID': $('#CityDivisitionCanSee').val(), 'DepartOnlyCode': treeNode.DepartOnlyCode, 'TypeCode': 'dep-divisition-sel', 'ViewType': 1 }, true, function (result) {
+                    DepartmentIndex.DivisitionCanSeeSelectedNodes = [];
+                    TreeDivisitionCanSee.checkAllNodes(false);
+                    if (!!result) {
+                        for (var i = 0; i < result.Data.length; i++) {
+                            var node = TreeDivisitionCanSee.getNodeByParam("DepartOnlyCode", result.Data[i].DataCode);
+                            if (node != null) {
+                                TreeDivisitionCanSee.checkNode(node, true);
+                            }
+                        };
+                        layui.each(result.Data, function () {
+                            DepartmentIndex.DivisitionCanSeeSelectedNodes.push(this.DataCode);
+                        });
+                    }
+                });
+            }
+
+            //门限管辖权限能看我的
+            var TreeDivisitionBeSeen = $.fn.zTree.getZTreeObj("TreeDivisitionBeSeen");
+            if (!!TreeDivisitionBeSeen) {
+                PublicComm.Ajax('POST', '/Authority/Privilege/GetPrivDepartmentList', { 'CityID': $('#CityDivisitionBeSeen').val(), 'DataCode': treeNode.DepartOnlyCode, 'TypeCode': 'dep-divisition-sel', 'ViewType': 2 }, true, function (result) {
+                    DepartmentIndex.DivisitionBeSeenSelectedNodes = [];
+                    TreeDivisitionBeSeen.checkAllNodes(false);
+                    if (!!result) {
+                        for (var i = 0; i < result.Data.length; i++) {
+                            var node = TreeDivisitionBeSeen.getNodeByParam("DepartOnlyCode", result.Data[i].DepartOnlyCode);
+                            if (node != null) {
+                                TreeDivisitionBeSeen.checkNode(node, true);
+                            }
+                        };
+                        layui.each(result.Data, function () {
+                            DepartmentIndex.DivisitionBeSeenSelectedNodes.push(this.DataCode);
+                        });
+                    }
+                });
+            }
+        };
+        var setting = {
+            view: {
+                selectedMulti: false
+            },
+            check: {
+                enable: false,
+                chkStyle: "checkbox",
+                chkboxType: { "Y": "ps", "N": "ps" }
+            },
+            data: {
+                simpleData: {
+                    enable: true,
+                    idKey: "DeptNo",
+                    pIdKey: "ParentDeptNo",
+                    rootPId: 0
+                }
+				,
+                key: {
+                    checked: "checked",
+                    name: "DeptName",
+                    id: "DepartOnlyCode"
+                }
+            },
+            edit: {
+                enable: false
+            },
+            callback: {    //第一步
+                onClick: zTreeOnClick
+            }
+        };
+        if (!!listSorted) {
+            zTree = $.fn.zTree.init(element, setting, listSorted);
+            zTree.expandAll(true);
+        } else {
+            if (!!CacheHelper.GetDepartment($('#City').val())) {
+                zTree = $.fn.zTree.init(element, setting, CacheHelper.GetDepartment($('#City').val()));
+                zTree.expandAll(true);
+            } else {
+                PublicComm.Ajax("POST", '/Authority/Department/GetDepartmentListByCity', { CityID: $('#City').val() }, true, function (result) {
+                    CacheHelper.SetDepartment($('#City').val(), result.Data);
+                    zTree = $.fn.zTree.init(element, setting, CacheHelper.GetDepartment($('#City').val()));
+                    zTree.expandAll(true);
+                });
+            }
+        }
+    },
+    GetTreeTable: function (form, cityid, listSorted) {
+        var InitTreeTable = function (listDept) {
+            $("#treeTable tbody").html(DepartmentIndex.BuildDeptDataPermissionHTML(listDept));
+            $("#treeTable").treetable({
+                expandable: true,
+                clickableNodeNames: true,
+            }, true);
+            //$("#treeTable").treetable("expandAll");//展开全部
+            var dept = DepartmentIndex.GetDeptTreeSelectedNodes();
+            if (!!dept && dept.DepartOnlyCode > 0) {
+                //TODO 绑值
+            }
+            form.render();
+        };
+        if (!!listSorted) {
+            InitTreeTable(listSorted);
+        } else {
+            if (!!CacheHelper.GetDepartment(cityid)) {
+                InitTreeTable(CacheHelper.GetDepartment(cityid));
+            } else {
+                PublicComm.Ajax("POST", '/Authority/Department/GetDepartmentListByCity', { CityID: cityid }, true, function (result) {
+                    CacheHelper.SetDepartment(cityid, result.Data);
+                    InitTreeTable(CacheHelper.GetDepartment(cityid));
+                });
+            }
+        }
+    },
+    /// <summary>
+    /// 获取门店树所选择节点
+    /// </summary>
+    GetDeptTreeSelectedNodes: function () {
+        var zTreeObj = $.fn.zTree.getZTreeObj("deptTree");
+        if (!zTreeObj) {
+            return null;
+        }
+        var selectedNodes = zTreeObj.getSelectedNodes();
+        return (!!selectedNodes && selectedNodes.length > 0) ? selectedNodes[0] : null;
+    },
+    /// <summary>
+    /// 判断门店树是否选择一个部门
+    ///<param name="node">当前选择节点</param>
+    /// </summary>
+    ValidateDeptTreeSelected: function (node) {
+        if (!node) {
+            layui.use('layer', function () {
+                var layer = layui.layer;
+                layer.alert("请选择一个部门");
+            });
+            return false;
+        }
+        return true;
+    },
+    /// <summary>
+    /// 根据treetable排序规则拼写HTML
+    /// </summary>
+    BuildDeptDataPermissionHTML: function (jsonArr) {
+        console.log(jsonArr);
+        var strHTML = '';//HTML字符串
+        if (!jsonArr.length) {
+            return strHTML;
+        }
+        //var listSorted = [];//根据reetable排序规则排序的json数组
+        ////根据父节点升序排序，0为根节点
+        //jsonArr = jsonArr.sort(function (a, b) {
+        //    return a.ParentDeptNo - b.ParentDeptNo;
+        //});
+        ////递归查找子节点
+        //jsonArr.forEach(function (item) {
+        //    DepartmentIndex.DeptSortNodeInfo(item, jsonArr, listSorted);
+        //});
+        jsonArr.forEach(function (item) {
+            strHTML += '<tr data-tt-id="' + item.DeptNo + '"  data-tt-parent-id="' + item.ParentDeptNo + '">';
+            strHTML += '<td>' + item.DeptName + '</td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary" DepartOnlyCode="' + item.DepartOnlyCode + '" TypeCode="dep-fy-sel"></td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary" DepartOnlyCode="' + item.DepartOnlyCode + '" TypeCode="dep-cust-sel"></td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary" DepartOnlyCode="' + item.DepartOnlyCode + '" TypeCode="dep-public-owner"></td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary" DepartOnlyCode="' + item.DepartOnlyCode + '" TypeCode="dep-private-owner"></td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary" DepartOnlyCode="' + item.DepartOnlyCode + '" TypeCode="dep-common-owner"></td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary" DepartOnlyCode="' + item.DepartOnlyCode + '" TypeCode="dep-fy-fellow"></td>';
+            strHTML += '<td><input type="checkbox" lay-skin="primary" DepartOnlyCode="' + item.DepartOnlyCode + '" TypeCode="dep-cust-fellow"></td>';
+            strHTML += '</tr>';
+        });
+        return strHTML;
+    },
+    /// <summary>
+    /// 根据treetable排序规则递归添加json数组
+    /// </summary>
+    DeptSortNodeInfo: function (obj, jsonArr, listSorted) {
+        //去重，已经存在直接跳过
+        if (listSorted.indexOf(obj) >= 0) {
+            return;
+        }
+        listSorted.push(obj);
+        delete jsonArr[jsonArr.indexOf(obj)];
+        if (!obj.DeptNo) {
+            return;
+        }
+        //递归查找子节点
+        jsonArr.forEach(function (item) {
+            if (obj.ID == item.ParentDeptNo) {
+                DepartmentIndex.DeptSortNodeInfo(item, jsonArr, listSorted);
+            }
+        });
+    },
+    ///<summary>
+    ///获取ztree所有父节点
+    ///</summary>
+    ///<param name="parentDeptNo">当前节点的parentDeptNo</param>
+    ///<param name="deptList">树的所有节点</param>
+    ///<param name="listSorted">返回节点集合</param>
+    ///<return></return>
+    GetParentNode: function (parentDeptNo, deptList, listSorted) {
+        if (DepartmentIndex.IsContain(parentDeptNo, listSorted)) {
+            return;
+        }
+        for (var i = 0; i < deptList.length; i++) {
+            if (parentDeptNo == deptList[i].DeptNo) {
+                listSorted.push(deptList[i]);
+                DepartmentIndex.GetParentNode(deptList[i].ParentDeptNo, deptList, listSorted);
+            }
+        }
+    },
+    ///<summary>
+    ///获取ztree所有子节点
+    ///</summary>
+    ///<param name="deptno">当前节点的deptno</param>
+    ///<param name="deptList">树的所有节点</param>
+    ///<param name="listSorted">返回节点集合</param>
+    ///<return></return>
+    GetChildNode: function (deptno, deptList, listSorted) {
+        //if (DepartmentIndex.IsContain(deptno, listSorted)) {
+        //	return;
+        //}
+        for (var i = 0; i < deptList.length; i++) {
+            if (deptno == deptList[i].DeptNo) {
+                if (listSorted.indexOf(deptList[i]) <= 0) {
+                    listSorted.push(deptList[i]);
+                }
+            }
+            if (deptno == deptList[i].ParentDeptNo) {
+                listSorted.push(deptList[i]);
+                DepartmentIndex.GetChildNode(deptList[i].DeptNo, deptList, listSorted);
+            }
+        }
+    },
+    IsContain: function (deptNo, listSorted) {
+        for (var i = 0; i < listSorted.length; i++) {
+            if (deptNo == listSorted[i].DeptNo) {
+                return true;
+            }
+        }
+        return false;
+    },
+    ///<summary>
+    ///获取ztree所有子节点
+    ///</summary>
+    ///<param name="dept">选择的部门</param>
+    ///<param name="deptList">树的所有节点</param>
+    ///<return>返回选择部门的节点集合</return>
+    GetTreeListSorted: function (dept, deptList) {
+        var listSorted = [];
+        DepartmentIndex.GetParentNode($(dept).attr('ParentDeptNo'), deptList, listSorted);
+        DepartmentIndex.GetChildNode($(dept).attr('DeptNo'), deptList, listSorted);
+        return listSorted;
+    },
+}
+
+$(function () {
+    DepartmentIndex.Init();
+});

@@ -1,0 +1,14 @@
+{
+  "ProjectFilePath": "d:\\A权限管理\\ERP.Authority.API\\ERP.Authority.Entity\\ERP.Authority.Entity.csproj",
+  "TargetFramework": "v4.5",
+  "TagHelpers": [],
+  "Configuration": {
+    "ConfigurationName": "UnsupportedRazor",
+    "LanguageVersion": "1.0",
+    "Extensions": [
+      {
+        "ExtensionName": "UnsupportedRazorExtension"
+      }
+    ]
+  }
+}

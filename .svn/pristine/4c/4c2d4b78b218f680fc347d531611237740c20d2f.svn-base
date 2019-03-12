@@ -1,0 +1,68 @@
+﻿using Dapper;
+using ERP.Authority.Entity.SDTM;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.DAL
+{
+    public class Priv_EmployeeDAL
+    {
+        public int MultiUpdatePrivToEmp(MultiList multiList)
+        {
+            string sql = "";
+            var result = GetPriv_EmployeeByEmpCode(multiList);
+            if (result.Count == 0)
+            {
+                 sql = @"INSERT dbo.Priv_Employee
+                ( EmpCode ,
+                  CityID ,
+                  PlatForm ,
+                  ModulePrivList ,
+                  DataPrivJson,
+                  IsDel ,
+                  CreateDate ,
+                  ModDate
+                )
+        VALUES  ( @EmpCode , -- EmpCode - int
+                  @CityID , -- CityID - smallint
+                  @PlatForm , -- PlatForm - tinyint
+                  @ModulePrivList , -- ModulePrivList - nvarchar(max)
+                  @DataPrivJson,
+                  0 , -- IsDel - tinyint
+                  GETDATE() , -- CreateDate - datetime
+                  GETDATE()  -- ModDate - datetime
+                )";
+            }
+            else
+            {
+                 sql = @"UPDATE  dbo.Priv_Employee
+        SET     ModulePrivList = @ModulePrivList ,
+                DataPrivJson=@DataPrivJson,
+                ModDate = GETDATE() ,
+                CityID = @CityID ,
+                PlatForm = @PlatForm
+        WHERE   EmpCode = @EmpCode";
+            }
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Execute(sql, multiList);
+            }
+        }
+        public List<Priv_Employee> GetPriv_EmployeeByEmpCode(MultiList multiList)
+        {
+            string sql = @" SELECT  *
+        FROM    dbo.Priv_Employee
+        WHERE   EmpCode = @EmpCode
+                AND CityID = @CityID
+                AND PlatForm = @PlatForm
+                AND IsDel=0";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Query<Priv_Employee>(sql, multiList).ToList();
+            }
+        }
+    }
+}

@@ -1,0 +1,48 @@
+﻿using Dapper;
+using ERP.Authority.Entity.SDTM;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.DAL
+{
+    public class Priv_PositionDAL
+    {
+        public int UpdatePrivToPosition(Priv_Position p_Position)
+        {
+            string sql = @"IF EXISTS ( SELECT  1
+                            FROM    Priv_Position
+                            WHERE   PositionCode = @PositionCode
+                                    AND [PlatForm] = @PlatForm
+                                    AND IsDel = 0 )
+                    BEGIN
+                        UPDATE  dbo.Priv_Position
+                        SET     ModulePrivList = @ModulePrivList ,
+                                ModDate = @ModDate
+                        WHERE   PositionCode = @PositionCode
+                    END;
+                ELSE
+                    BEGIN
+                        INSERT  INTO Priv_Position
+                                ( PositionCode ,
+                                  Modifier ,
+                                  PlatForm ,
+                                  ModulePrivList ,
+                                  ModDate
+                                )
+                        VALUES  ( @PositionCode ,
+                                  @Modifier ,
+                                  3 ,
+                                  @ModulePrivList ,
+                                  @ModDate
+                                );
+                    END";
+            using (var conn = AdoConfig.GetDBConnection())
+            {
+                return conn.Execute(sql, p_Position);
+            }
+        }
+    }
+}

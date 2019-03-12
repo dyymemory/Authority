@@ -1,0 +1,111 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<link rel="stylesheet" href="../../Content/layui/css/layui.css" media="all" />
+	<link rel="stylesheet" href="../../Content/ztree/metroStyle/hjc.min.css" media="all" />
+	<link rel="stylesheet" href="../../Content/ztree/metroStyle/metroStyle.css" media="all" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title></title>
+	<style>
+		.layui-form .layui-form-item .layui-input-block .layui-btn {
+			width: 120px;
+		}
+
+		.layui-form-item .layui-input-inline {
+			width: 180px;
+			margin-right: 0px;
+		}
+
+		.ztree {
+			width: 295px;
+			height: 500px;
+			overflow: no-display;
+			margin-left: 5px;
+		}
+
+		div.div0 {
+			float: left;
+			margin-left: 30px;
+		}
+
+		div.div1 {
+			float: left;
+		}
+
+		div.div2 {
+			float: right;
+		}
+
+		div.div3 {
+			float: right;
+			margin-right: 50px;
+		}
+
+		.layui-btn {
+			margin: 15px 5px;
+			width: 150px
+		}
+
+		.layui-btn-sm {
+			height: 40px;
+			line-height: 40px;
+		}
+
+		.layui-form-radio {
+			margin-top: 20px;
+		}
+
+		.layui-form-item {
+			clear: none
+		}
+	</style>
+</head>
+<body>
+	<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+		<legend>复制地理权限到门店</legend>
+	</fieldset>
+	<form class="layui-form" action="">
+		<div class="layui-form-item">
+			<label class="layui-form-label">城市</label>
+			<div class="layui-input-inline" style="width:auto">
+				<select id="City" lay-filter="City" lay-search=""></select>
+			</div>
+			<label class="layui-form-label">部门</label>
+			<div class="layui-input-inline" style="width:auto">
+				<select id="Department" lay-filter="Department" lay-search=""></select>
+			</div>
+		</div>
+		<div class="div0 layui-form-item">
+			<div class="layui-row layui-input-inline">
+				<input type="radio" name="TypeCodeArea" lay-filter="TypeCodeArea" value="area-fy-sel" title="查看房源">
+				<input type="radio" name="TypeCodeArea" lay-filter="TypeCodeArea" value="area-fy-modify" title="维护房源">
+				<input type="radio" name="TypeCodeArea" lay-filter="TypeCodeArea" value="area-cust-sel" title="查看客源">
+				<input type="radio" name="TypeCodeArea" lay-filter="TypeCodeArea" value="area-fy-info" title="资料房源">
+			</div>
+		</div>
+		<div class="div1 layui-form-item">
+			<div class="setting-equal">
+				<div id="deptDataTree" class="ztree ztree3"></div>
+			</div>
+		</div>
+		<div class="div2 layui-form-item">
+			<div class="setting-equal">
+				<div id="copyToDataTree" class="ztree ztree3"></div>
+			</div>
+		</div>
+		<div class="div3 layui-form-item">
+			<div class="layui-row ">
+				<a href="javascript:;" onclick="DepartmentCopyAreaToDep.Cancel()" class="layui-btn layui-btn-sm">取消</a>
+				<a href="javascript:;" onclick="DepartmentCopyAreaToDep.Confirm()" class="layui-btn layui-btn-sm">确认</a>
+			</div>
+		</div>
+	</form>
+	<script src="../../Content/Jquery/jquery-1.11.3.min.js" charset="utf-8"></script>
+	<script src="../../Content/layui/layui.js" charset="utf-8"></script>
+	<script src="../../Content/jscustomer/PublicComm.js" charset="utf-8"></script>
+	<script src="../../Content/jscustomer/ControlComm.js" charset="utf-8"></script>
+	<script src="../../Content/ztree/jquery.ztree.all.min.js" charset="utf-8"></script>
+	<script src="../../Content/jscustomer/department/DepartmentCopyAreaToDep.js" charset="utf-8"></script>
+	<script src="../../Content/jscustomer/CacheHelper.js"></script>
+</body>
+</html>

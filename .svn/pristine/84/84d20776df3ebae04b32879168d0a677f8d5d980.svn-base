@@ -1,0 +1,35 @@
+﻿using ERP.Authority.DAL;
+using ERP.Authority.Entity.SDTM;
+using ERP.Authority.Entity.SDTMComm;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ERP.Authority.BLL
+{
+    public  class Priv_ModuleBLL
+    {
+        public ResultModel<List<E_MarketMenu>> GetTreeList()
+        {
+            return new ResultModel<List<E_MarketMenu>>() { Data = new Priv_ModuleDAL().GetTreeList() };
+        }
+        public ResultModel<List<Priv_Module>> GetPrivilegeTreeList()
+        {
+            return new ResultModel<List<Priv_Module>>() { Data = new Priv_ModuleDAL().GetPrivilegeTreeList() };
+        }
+        public ResultModel<object> UpdateEmpPrivilege(string modulePrivList)
+        {
+            var result = new Priv_ModuleDAL().UpdateEmpPrivilege(modulePrivList);
+            if (result > 0)
+            {
+                return new ResultModel<object>() { };
+            }
+            else
+            {
+                return new ResultModel<object>() { Code = 2001,Message="更新失败"};
+            }
+        }
+    }
+}
